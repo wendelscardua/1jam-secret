@@ -1,0 +1,40 @@
+# rooms
+# clue rooms:
+# [a]: study/escritório  [b]: hall/hall  [c]: lounge/sala de estar
+# [d]: library/biblioteca [e]: dining room / sala de jantar
+# [f]: billiard room / salão de jogos 
+# [g]: conservatory / sala de música [h]: ballroom / salão de festas [i]: kitchen / cozinha
+#
+# 8 people (A, B, C, D, E, F, G, H)
+# + victim (V)
+
+      A B C D E F G H V|n|  (n = number of people with V; can only be 2 with culprit)
+18:00|B|B|.|.|.|.|.|.|B|3|
+18:10|b|b|.|.|B|.|.|.|b|4|
+18:20|I|b|B|B|I|B|.|B|b|6|
+18:30|i|b|b|b|i|b|B|b|b|7|
+18:40|i|F|I|F|C|I|F|F|F|5|
+18:50|C|f|C|f|c|i|f|f|f|5|
+19:00|c|f|c|f|c|F|f|f|f|6|
+19:10|c|f|c|f|c|f|f|f|f|6|
+19:20|c|f|c|A|A|f|f|f|f|4|
+19:30|c|H|H|a|a|I|f|I|I|3|
+19:40|D|h|h|a|a|i|D|i|i|3|
+19:50|d|h|I|D|I|i|d|i|i|5|
+20:00|d|I|i|d|i|E|d|E|E|3|
+20:10|d|i|H|E|i|e|d|e|e|4|
+20:20|G|E|h|e|C|H|G|H|e|3|
+20:30|g|e|A|e|c|h|g|h|e|1|
+20:40|C|e|a|H|c|h|g|h|A|2|   * C!
+20:50|c|H|a|h|c|h|g|h|a|2|   * C!
+21:00|c|h|E|E|c|E|E|h|E|5|
+21:10|E|E|e|e|E|e|e|E|e|9|
+21:20|e|e|e|e|e|e|e|e|e|9|
+21:30|e|F|e|G|F|G|e|F|G|3|
+21:40|C|f|C|g|f|g|G|f|g|4|
+21:50|c|f|c|g|f|g|g|f|g|4|
+22:00|c|f|c|g|f|g|g|f|g|4|
+
+# Alethioscope allows the detective to see a 30min (?) segment of time focused on a person's memory
+# - each person can be focused only 3 times - if we try to use the alethioscope for a fourth time, it will
+#   stop working for a few days (so it should be used only to point the culprit)
