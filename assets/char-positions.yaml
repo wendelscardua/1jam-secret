@@ -1,0 +1,27 @@
+# This lists for each character (A..H, V),
+#  and for each timestamp,
+#    a tuple [room, x, y]
+#
+# Missing timestamps inside a room will be interpolated
+A:
+  1800: [b, 0x50, 0x10] # enter b
+  1820: [i, 0x30, 0x10] # enter i
+  1850: [g, 0xf8, 0x40] # enter g
+  1940: [d, 0xf8, 0x60] # enter d
+  2020: [g, 0xf8, 0x58] # enter g
+  2040: [c, 0x40, 0xe8] # enter c
+  2110: [e, 0x50, 0x10] # enter e
+  2140: [c, 0x60, 0x58] # enter c
+B:
+  1800: [b, 0x70, 0x10] # enter b
+  1840: [f, 0x40, 0x10] # enter f
+  1930: [h, 0x38, 0x10] # enter h
+  2000: [i, 0x30, 0x10] # enter i
+  2020: [e, 0x00, 0x60] # enter e
+  2050: [h, 0xb0, 0x10] # enter h
+  2110: [e, 0x00, 0x60] # enter e
+  2130: [f, 0x30, 0x10] # enter f
+  
+  
+  
+  
