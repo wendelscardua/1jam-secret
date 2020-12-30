@@ -57,6 +57,15 @@ puts 'keyframe_lt_l: .lobytes keyframe_lt'
 puts 'keyframe_lt_h: .hibytes keyframe_lt'
 (0..last_time_index).each do |index|
   timestamp = index_to_timestamp(index)
-  bytes = timeline[index].map { |byte| '$%02x' % byte }.join(', ')
+  bytes = timeline[index]
+  delta_x, delta_y = if index == last_time_index ||
+                        timeline[index][0] != timeline[index + 1][0]
+                       [0, 0]
+                     else
+                       raise if (timeline[index][1] - timeline[index+1][1]).abs >= 4 * 60 ||
+                                (timeline[index][2] - timeline[index+1][2]).abs >= 4 * 60
+                       [0, 0]
+                     end
+  bytes = bytes.map { |byte| '$%02x' % byte }.join(', ')
   puts "keyframe_#{timestamp}: .byte #{bytes}"
 end
