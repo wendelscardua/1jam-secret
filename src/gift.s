@@ -66,6 +66,8 @@ FT_DPCM_OFF=$c000
 
 ; game config
 
+NUM_CHARACTERS = 2
+
 .enum direction
   up
   down
@@ -114,6 +116,12 @@ old_nmis: .res 1
 
 sprite_counter: .res 1
 
+alethioscope_character: .res 1
+alethioscope_current_frame: .res 1
+alethioscope_target_frame: .res 1
+alethioscope_current_room: .res 1
+alethioscope_frame_ptr: .res 2
+
 temp_x: .res 1
 temp_y: .res 1
 temp_acc: .res 1
@@ -122,7 +130,8 @@ temp_flag: .res 1
 
 .enum game_states
   waiting_to_start
-  playing
+  investigating
+  alethioscoping
   game_over
 .endenum
 
@@ -382,10 +391,10 @@ etc:
   RTS
 .endproc
 
-.proc go_to_playing
+.proc go_to_investigating
   SCREEN_OFF
 
-  LDA #game_states::playing
+  LDA #game_states::investigating
   STA game_state
 
   ; erase sprites
@@ -432,7 +441,14 @@ etc:
   LDA pressed_buttons
   AND #BUTTON_START
   BEQ :+
-  JSR go_to_playing
+  ; DEBUG
+  ; JSR go_to_investigating
+  LDA #0
+  STA alethioscope_character
+  LDA #0
+  STA alethioscope_current_frame
+  LDA 
+  JSR go_to_alethioscoping
 :
   RTS
 .endproc
@@ -458,7 +474,7 @@ etc:
   RTS
 .endproc
 
-.proc playing
+.proc investigating
   JSR render_stuff
   RTS
 .endproc
@@ -485,7 +501,7 @@ etc:
 
 .segment "RODATA"
 
-.define game_state_handlers waiting_to_start-1, playing-1, game_over-1
+.define game_state_handlers waiting_to_start-1, investigating-1, game_over-1
 
 game_state_handlers_l: .lobytes game_state_handlers
 game_state_handlers_h: .hibytes game_state_handlers
