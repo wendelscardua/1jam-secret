@@ -499,6 +499,8 @@ nametable_main: .incbin "../assets/nametables/main.rle"
 
 .include "../assets/metasprites.inc"
 
+.include "../assets/char-positions.inc"
+
 ; masks for more efficient ranged rand
 rand_mask:
 .byte %00000000 ; <= 0
