@@ -116,12 +116,26 @@ old_nmis: .res 1
 
 sprite_counter: .res 1
 
+; alethioscope stuff
 alethioscope_character: .res 1
 alethioscope_current_frame: .res 1
 alethioscope_target_frame: .res 1
 alethioscope_current_room: .res 1
 alethioscope_frame_ptr: .res 2
+alethioscope_frame_counter: .res 1
 
+; character stuff
+character_room: .res NUM_CHARACTERS
+character_x: .res NUM_CHARACTERS
+character_sx: .res NUM_CHARACTERS
+character_y: .res NUM_CHARACTERS
+character_sy: .res NUM_CHARACTERS
+character_delta_sx: .res NUM_CHARACTERS
+character_delta_sy: .res NUM_CHARACTERS
+character_target_x: .res NUM_CHARACTERS
+character_target_y: .res NUM_CHARACTERS
+
+; temp stuff
 temp_x: .res 1
 temp_y: .res 1
 temp_acc: .res 1
@@ -430,6 +444,33 @@ etc:
   RTS
 .endproc
 
+.proc go_to_alethioscoping
+  LDA #game_states::alethioscoping
+  STA game_state
+
+  ; erase sprites
+  LDX #$00
+  LDA #$F0
+:
+  STA oam_sprites+Sprite::ycoord, X
+  .repeat .sizeof(Sprite)
+  INX
+  .endrepeat
+  BNE :-
+
+  JSR load_palettes
+
+  JSR load_default_chr
+
+  JSR load_alethioscope_current_frame
+
+  ; game setup here
+
+  ; PLAY CanonInD
+
+  RTS
+.endproc
+
 .proc go_to_game_over
   LDA #game_states::game_over
   STA game_state
@@ -447,7 +488,7 @@ etc:
   STA alethioscope_character
   LDA #0
   STA alethioscope_current_frame
-  LDA 
+  LDA #10
   JSR go_to_alethioscoping
 :
   RTS
@@ -496,12 +537,111 @@ etc:
   RTS
 .endproc
 
+.proc alethioscoping
+  RTS
+.endproc
+
+.proc load_alethioscope_current_frame
+  LDA #0
+  STA alethioscope_frame_counter
+  LDX alethioscope_current_frame
+  LDA keyframe_lt_l, X
+  STA alethioscope_frame_ptr
+  LDA keyframe_lt_h, X
+  STA alethioscope_frame_ptr+1
+  LDY #0
+  LDX #0
+loop:
+  LDA (alethioscope_frame_ptr), Y
+  INY
+  STA character_room, X
+  LDA (alethioscope_frame_ptr), Y
+  INY
+  STA character_x, X
+  LDA #0
+  STA character_sx, X
+  LDA (alethioscope_frame_ptr), Y
+  INY
+  STA character_y, X
+  LDA #0
+  STA character_sy, X
+  LDA (alethioscope_frame_ptr), Y
+  INY
+  STA character_delta_sx, X
+  LDA (alethioscope_frame_ptr), Y
+  INY
+  STA character_delta_sy, X  
+  INX
+  CPX #NUM_CHARACTERS
+  BNE loop
+
+  LDA alethioscope_current_frame
+  CMP #LAST_FRAME
+  BEQ skip_read_target
+
+  ; keep reading next frame data for target_x/target_y
+  LDX #0
+next_frame_loop:  
+  INY ; skip room
+
+  LDA (alethioscope_frame_ptr), Y
+  INY
+  STA character_target_x, X
+
+  LDA (alethioscope_frame_ptr), Y
+  INY
+  STA character_target_y, X
+
+  INY ; skip delta sx
+  INY ; skip delta sy
+
+  INX
+  CPX #NUM_CHARACTERS
+  BNE next_frame_loop
+
+skip_read_target:
+  LDX alethioscope_character
+  LDA character_room, X
+  JSR load_alethioscoping_room
+  RTS
+.endproc
+
+; input: A = desired room
+; if alethioscope_current_room != A, change it to A then loads nametable
+.proc load_alethioscoping_room
+  CMP alethioscope_current_room
+  BNE :+
+  RTS
+:
+  STA alethioscope_current_room
+  SCREEN_OFF
+
+  LDA PPUSTATUS
+  LDA #$20
+  STA PPUADDR
+  LDA #$00
+  STA PPUADDR
+
+  LDX alethioscope_current_room
+  LDA room_pointers_l, X
+  STA rle_ptr
+  LDA room_pointers_h, X
+  STA rle_ptr+1
+  JSR unrle
+
+  VBLANK
+
+  SCREEN_ON
+
+  RTS
+.endproc
+
 .segment "VECTORS"
 .addr nmi_handler, reset_handler, irq_handler
 
 .segment "RODATA"
 
-.define game_state_handlers waiting_to_start-1, investigating-1, game_over-1
+.define game_state_handlers waiting_to_start-1, investigating-1, alethioscoping-1, game_over-1
 
 game_state_handlers_l: .lobytes game_state_handlers
 game_state_handlers_h: .hibytes game_state_handlers
@@ -512,6 +652,22 @@ palettes:
 
 nametable_title: .incbin "../assets/nametables/title.rle"
 nametable_main: .incbin "../assets/nametables/main.rle"
+
+; rooms:
+.define room_pointers nametable_study, nametable_hall, nametable_lounge, nametable_library, \
+                      nametable_dining_room, nametable_conservatory, nametable_ballroom, nametable_kitchen
+room_pointers_l: .lobytes room_pointers
+room_pointers_h: .hibytes room_pointers
+
+nametable_study: .incbin "../assets/nametables/study.rle"
+nametable_hall: .incbin "../assets/nametables/hall.rle"
+nametable_lounge: .incbin "../assets/nametables/lounge.rle"
+nametable_library: .incbin "../assets/nametables/library.rle"
+nametable_dining_room: .incbin "../assets/nametables/dining-room.rle"
+nametable_conservatory: .incbin "../assets/nametables/conservatory.rle"
+nametable_ballroom: .incbin "../assets/nametables/ballroom.rle"
+nametable_kitchen: .incbin "../assets/nametables/kitchen.rle"
+
 
 .include "../assets/metasprites.inc"
 
