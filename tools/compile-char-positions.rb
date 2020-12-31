@@ -7,6 +7,7 @@ data = YAML.safe_load File.read(ARGV[0])
 
 characters = 'AB'.each_char.with_index.to_h
 rooms = 'zabcdefghi'.each_char.with_index.to_h
+fpm = 60
 
 def timestamp_to_index(timestamp)
   start = 18 * 60 + 0
@@ -22,14 +23,14 @@ end
 last_time_index = timestamp_to_index(2200)
 
 timeline = Array.new(last_time_index + 1) do
-  []
+  {}
 end
 
 characters.each do |character, _|
   char_data = data[character].transform_keys { |key| timestamp_to_index(key) }
   indices = char_data.keys.sort
   (0..last_time_index).each do |time_index|
-    timeline[time_index] +=
+    timeline[time_index][character] =
       if indices.include?(time_index)
         room, x, y = char_data[time_index]
         [rooms[room], x, y]
@@ -57,15 +58,20 @@ puts 'keyframe_lt_l: .lobytes keyframe_lt'
 puts 'keyframe_lt_h: .hibytes keyframe_lt'
 (0..last_time_index).each do |index|
   timestamp = index_to_timestamp(index)
-  bytes = timeline[index]
-  delta_x, delta_y = if index == last_time_index ||
-                        timeline[index][0] != timeline[index + 1][0]
-                       [0, 0]
-                     else
-                       raise if (timeline[index][1] - timeline[index+1][1]).abs >= 4 * 60 ||
-                                (timeline[index][2] - timeline[index+1][2]).abs >= 4 * 60
-                       [0, 0]
-                     end
-  bytes = bytes.map { |byte| '$%02x' % byte }.join(', ')
+  bytes = timeline[index].flat_map do |character, char_data|
+    room, x, y = char_data
+    delta_x, delta_y = if index == last_time_index ||
+                          room != timeline[index + 1][character][0]
+                         [0, 0]
+                       else
+                         (1..2).map do |i|
+                           delta = (timeline[index][character][i] - timeline[index + 1][character][i]).abs
+                           delta = delta.to_f / fpm
+                           raise if delta.to_i > 0
+                           (delta * 256).to_i
+                         end
+                       end
+    [room, x, y, delta_x, delta_y]
+  end.map { |byte| '$%02x' % byte }.join(', ')
   puts "keyframe_#{timestamp}: .byte #{bytes}"
 end
