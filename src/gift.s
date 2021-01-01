@@ -68,6 +68,7 @@ FT_DPCM_OFF=$c000
 
 LAST_FRAME = 240
 NUM_CHARACTERS = 2
+FRAMES_PER_ALETHIOSCOPE_MINUTE = 60
 
 .enum direction
   up
@@ -490,8 +491,10 @@ etc:
   STA alethioscope_character
   LDA #0
   STA alethioscope_current_frame
-  LDA #10
+  LDA #100
+  STA alethioscope_target_frame
   JSR go_to_alethioscoping
+  ; END OF DEBUG
 :
   RTS
 .endproc
@@ -518,7 +521,7 @@ etc:
 .endproc
 
 .proc investigating
-  JSR render_characters
+  KIL ; TODO
   RTS
 .endproc
 
@@ -527,8 +530,71 @@ etc:
   STA sprite_counter
   
   JSR render_characters
-  JSR erase_remaining_sprites  
+  JSR erase_remaining_sprites
+
+  DEC alethioscope_frame_counter
+  BEQ next_alethioscope_frame
+  BMI next_alethioscope_frame
+
+  JSR alethioscope_animation
+
   RTS
+next_alethioscope_frame:
+  INC alethioscope_current_frame
+  LDA alethioscope_current_frame
+  CMP alethioscope_target_frame
+  BCS :+
+  JSR load_alethioscope_current_frame
+  RTS
+:
+  JSR go_to_investigating
+  RTS
+.endproc
+
+.proc alethioscope_animation
+  LDX #0
+loop:
+  LDA character_x, X
+  CMP character_target_x, X
+  BCS decrement_x
+  LDA character_sx, X
+  CLC
+  ADC character_delta_sx, X
+  STA character_sx, X
+  BCC check_y
+  INC character_x, X
+  JMP check_y
+decrement_x:
+  LDA character_sx, X
+  SEC
+  SBC character_delta_sx, X
+  STA character_sx, X
+  BCS check_y
+  DEC character_x, X
+check_y:
+
+  LDA character_y, X
+  CMP character_target_y, X
+  BCS decrement_y
+  LDA character_sy, X
+  CLC
+  ADC character_delta_sy, X
+  STA character_sy, X
+  BCC next
+  INC character_y, X
+  JMP next
+decrement_y:
+  LDA character_sy, X
+  SEC
+  SBC character_delta_sy, X
+  STA character_sy, X
+  BCS next
+  DEC character_y, X
+next:
+  INX
+  CPX #NUM_CHARACTERS
+  BNE loop
+  RTS  
 .endproc
 
 .proc render_characters
@@ -624,7 +690,7 @@ return:
 .endproc
 
 .proc load_alethioscope_current_frame
-  LDA #0
+  LDA #FRAMES_PER_ALETHIOSCOPE_MINUTE
   STA alethioscope_frame_counter
   LDX alethioscope_current_frame
   LDA keyframe_lt_l, X
@@ -736,8 +802,10 @@ nametable_title: .incbin "../assets/nametables/title.rle"
 nametable_main: .incbin "../assets/nametables/main.rle"
 
 ; rooms:
-.define room_pointers $0000, nametable_study, nametable_hall, nametable_lounge, nametable_library, \
-                      nametable_dining_room, nametable_conservatory, nametable_ballroom, nametable_kitchen
+.define room_pointers $0000, \
+                      nametable_study, nametable_hall, nametable_lounge, nametable_library, \
+                      nametable_dining_room, nametable_billiard_room, nametable_conservatory, nametable_ballroom, \
+                      nametable_kitchen
 room_pointers_l: .lobytes room_pointers
 room_pointers_h: .hibytes room_pointers
 
@@ -746,6 +814,7 @@ nametable_hall: .incbin "../assets/nametables/hall.rle"
 nametable_lounge: .incbin "../assets/nametables/lounge.rle"
 nametable_library: .incbin "../assets/nametables/library.rle"
 nametable_dining_room: .incbin "../assets/nametables/dining-room.rle"
+nametable_billiard_room: .incbin "../assets/nametables/billiard-room.rle"
 nametable_conservatory: .incbin "../assets/nametables/conservatory.rle"
 nametable_ballroom: .incbin "../assets/nametables/ballroom.rle"
 nametable_kitchen: .incbin "../assets/nametables/kitchen.rle"
