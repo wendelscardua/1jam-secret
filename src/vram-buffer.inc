@@ -37,18 +37,25 @@
   PLA
 .endmacro
 
+; ensures we have "size" bytes free on vram buffer
 ; cobbles X
-.macro write_tile_to_vram ppu_addr, tile
+; returns: X = first free buffer index
+.macro vram_buffer_alloc size
 .local wait_nmi
 .local no_flush
   LDX vram_buffer_sp
-  CPX #($7f - 5)
+  CPX #($7f - size)
   BCC no_flush
   LDA old_nmis
 wait_nmi:
   CMP nmis
   BEQ wait_nmi
 no_flush:
+.endmacro
+
+; cobbles X
+.macro write_tile_to_vram ppu_addr, tile
+  vram_buffer_alloc 5
   LDA #.hibyte(ppu_addr)
   STA vram_buffer, X
   INX
@@ -68,16 +75,7 @@ no_flush:
 ; input: ppuaddr and 2-digit decimal
 ; cobbles X, Y, A
 .macro write_decimal_to_vram ppu_addr, decimal
-.local wait_nmi
-.local no_flush
-  LDX vram_buffer_sp
-  CPX #($7f - 5)
-  BCC no_flush
-  LDA old_nmis
-wait_nmi:
-  CMP nmis
-  BEQ wait_nmi
-no_flush:
+  vram_buffer_alloc 6
   LDA #.hibyte(ppu_addr)
   STA vram_buffer, X
   INX
@@ -100,19 +98,12 @@ no_flush:
 .endmacro
 
 .macro write_string_to_vram ppu_addr, str_ptr
-  .local no_flush
-  .local wait_nmi
   PHA
   TXA
   PHA
-  LDX vram_buffer_sp
-  CPX #($7f - 5)
-  BCC no_flush
-  LDA old_nmis
-wait_nmi:
-  CMP nmis
-  BEQ wait_nmi
-no_flush:
+
+  vram_buffer_alloc 5
+
   LDA #.hibyte(ppu_addr)
   ORA #$80
   STA vram_buffer, X
@@ -129,6 +120,7 @@ no_flush:
   LDA #$00
   STA vram_buffer, X
   STX vram_buffer_sp
+
   PLA
   TAX
   PLA

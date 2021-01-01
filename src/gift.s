@@ -116,6 +116,12 @@ sprite_ptr: .res 2 ; metasprite pointer
 nmis: .res 1
 old_nmis: .res 1
 
+language: .res 1
+.enum languages
+  english
+  portuguese
+.endenum
+
 sprite_counter: .res 1
 
 ; alethioscope stuff
@@ -136,6 +142,10 @@ character_delta_sx: .res NUM_CHARACTERS
 character_delta_sy: .res NUM_CHARACTERS
 character_target_x: .res NUM_CHARACTERS
 character_target_y: .res NUM_CHARACTERS
+
+; temp string
+
+clock_string: .res 6
 
 ; temp stuff
 temp_x: .res 1
@@ -271,6 +281,12 @@ clear_ram:
   STA rng_seed+1
 
   SEI ; disable interrupts
+
+  ; prepare clock string
+  LDA #$1a
+  STA clock_string+2
+  LDA #$00
+  STA clock_string+5
 
   JSR go_to_title
 
@@ -751,6 +767,19 @@ skip_read_target:
   LDX alethioscope_character
   LDA character_room, X
   JSR load_alethioscoping_room
+
+  LDX alethioscope_current_frame
+  LDA clock_digits_0, X
+  STA clock_string+0
+  LDA clock_digits_1, X
+  STA clock_string+1
+  LDA clock_digits_2, X
+  STA clock_string+3
+  LDA clock_digits_3, X
+  STA clock_string+4
+
+  write_string_to_vram $2057, clock_string
+
   RTS
 .endproc
 
@@ -777,6 +806,28 @@ skip_read_target:
   STA rle_ptr+1
   JSR unrle
 
+  vram_buffer_alloc 5
+  LDA #($20 | $80)
+  STA vram_buffer, X
+  INX
+  LDA #$44
+  STA vram_buffer, X
+  INX
+  LDA alethioscope_current_room
+  ASL
+  CLC
+  ADC language
+  TAY
+  LDA room_strings_l, Y
+  STA vram_buffer, X
+  INX
+  LDA room_strings_h, Y
+  STA vram_buffer, X
+  INX
+  LDA #$00
+  STA vram_buffer, X
+  STX vram_buffer_sp
+
   VBLANK
 
   SCREEN_ON
@@ -800,6 +851,40 @@ palettes:
 
 nametable_title: .incbin "../assets/nametables/title.rle"
 nametable_main: .incbin "../assets/nametables/main.rle"
+
+; room names
+.define room_strings $0000, $0000, \
+                     string_study_en, string_study_pt, \
+                     string_hall_en, string_hall_pt, \
+                     string_lounge_en, string_lounge_pt, \
+                     string_library_en, string_libray_pt, \
+                     string_dining_room_en, string_dining_room_pt, \
+                     string_billiard_room_en, string_billiard_room_pt, \
+                     string_conservatory_en, string_conservatory_pt, \
+                     string_ballroom_en, string_ballroom_pt, \
+                     string_kitchen_en, string_kitchen_pt
+
+room_strings_l: .lobytes room_strings
+room_strings_h: .hibytes room_strings
+
+string_study_en: .byte "Study", $00
+string_study_pt: .byte "Escritorio", $00 ; TODO diacritics
+string_hall_en:
+string_hall_pt: .byte "Hall", $00
+string_lounge_en: .byte "Lounge", $00
+string_lounge_pt: .byte "Sala de estar", $00
+string_library_en: .byte "Library", $00
+string_libray_pt: .byte "Biblioteca", $00
+string_dining_room_en: .byte "Dining room", $00
+string_dining_room_pt: .byte "Sala de jantar", $00
+string_billiard_room_en: .byte "Billiard room", $00
+string_billiard_room_pt: .byte "Salao de jogos", $00 ; TODO diacritics
+string_conservatory_en: .byte "Conservatory", $00
+string_conservatory_pt: .byte "Estufa", $00
+string_ballroom_en: .byte "Ballroom", $00
+string_ballroom_pt: .byte "Salao de festas", $00 ; TODO diacritics
+string_kitchen_en: .byte "Kitchen", $00
+string_kitchen_pt: .byte "Cozinha", $00
 
 ; rooms:
 .define room_pointers $0000, \
