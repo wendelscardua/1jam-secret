@@ -66,6 +66,7 @@ FT_DPCM_OFF=$c000
 
 ; game config
 
+LAST_FRAME = 240
 NUM_CHARACTERS = 2
 
 .enum direction
@@ -444,6 +445,7 @@ etc:
   RTS
 .endproc
 
+; at least alethioscope_character and alethioscope_current_frame must've been set beforehand
 .proc go_to_alethioscoping
   LDA #game_states::alethioscoping
   STA game_state
@@ -516,16 +518,91 @@ etc:
 .endproc
 
 .proc investigating
-  JSR render_stuff
+  JSR render_characters
   RTS
 .endproc
 
-.proc render_stuff
+.proc alethioscoping
+  LDA #0
+  STA sprite_counter
+  
+  JSR render_characters
+  JSR erase_remaining_sprites  
+  RTS
+.endproc
+
+.proc render_characters
   LDX #0
+loop:
+  LDA character_room, X
+  CMP alethioscope_current_room
+  BNE next
+  LDA character_sprites_l, X
+  STA addr_ptr
+  LDA character_sprites_h, X
+  STA addr_ptr+1
+  LDA character_x, X
+  STA temp_x
+  LDA character_y, X
+  STA temp_y
+  TXA
+  PHA
+  JSR display_metasprite
+  PLA
+  TAX
+next:
+  INX
+  CPX #NUM_CHARACTERS
+  BNE loop
+  RTS
+.endproc
+
+; input: (addr_ptr) = metasprite pointer
+;        temp_x and temp_y = screen position for metasprite origin
+; cobbles X, Y
+.proc display_metasprite
+  LDY #0
+  LDX sprite_counter
+loop:
+  LDA (addr_ptr),Y ; delta x
+  CMP #128
+  BEQ return
+  INY
+  CLC
+  ADC temp_x
+
+  ;  trying to skip offscreen tiles
+  BCC :+
+  INY
+  INY
+  INY
+  JMP loop
+:
+
+  STA oam_sprites+Sprite::xcoord,X
+  LDA (addr_ptr),Y ; delta y
+  INY
+  SEC
+  SBC #$01
+  CLC
+  ADC temp_y
+  STA oam_sprites+Sprite::ycoord,X
+  LDA (addr_ptr),Y ; tile
+  INY
+  STA oam_sprites+Sprite::tile,X
+  LDA (addr_ptr),Y ; flags
+  INY
+  STA oam_sprites+Sprite::flag,X
+  .repeat .sizeof(Sprite)
+  INX
+  .endrepeat
+  JMP loop
+return:
   STX sprite_counter
+  RTS
+.endproc
 
-  ; JSR render_agents
-
+.proc erase_remaining_sprites
   LDX sprite_counter
   LDA #$F0
 :
@@ -534,10 +611,6 @@ etc:
   INX
   .endrepeat
   BNE :-
-  RTS
-.endproc
-
-.proc alethioscoping
   RTS
 .endproc
 
@@ -581,7 +654,7 @@ loop:
 
   ; keep reading next frame data for target_x/target_y
   LDX #0
-next_frame_loop:  
+next_frame_loop: 
   INY ; skip room
 
   LDA (alethioscope_frame_ptr), Y
@@ -654,7 +727,7 @@ nametable_title: .incbin "../assets/nametables/title.rle"
 nametable_main: .incbin "../assets/nametables/main.rle"
 
 ; rooms:
-.define room_pointers nametable_study, nametable_hall, nametable_lounge, nametable_library, \
+.define room_pointers $0000, nametable_study, nametable_hall, nametable_lounge, nametable_library, \
                       nametable_dining_room, nametable_conservatory, nametable_ballroom, nametable_kitchen
 room_pointers_l: .lobytes room_pointers
 room_pointers_h: .hibytes room_pointers
@@ -668,8 +741,14 @@ nametable_conservatory: .incbin "../assets/nametables/conservatory.rle"
 nametable_ballroom: .incbin "../assets/nametables/ballroom.rle"
 nametable_kitchen: .incbin "../assets/nametables/kitchen.rle"
 
-
 .include "../assets/metasprites.inc"
+
+.define character_sprites metasprite_0_data, metasprite_1_data, metasprite_2_data, metasprite_3_data, \
+                          metasprite_4_data, metasprite_5_data, metasprite_6_data, metasprite_7_data, \
+                          metasprite_8_data
+
+character_sprites_l: .lobytes character_sprites
+character_sprites_h: .hibytes character_sprites
 
 .include "../assets/char-positions.inc"
 
