@@ -586,6 +586,15 @@ loop:
   SBC #$01
   CLC
   ADC temp_y
+
+  ; trying to skip offscreen tiles
+  CMP #$20
+  BCS :+
+  INY
+  INY
+  JMP loop
+:
+
   STA oam_sprites+Sprite::ycoord,X
   LDA (addr_ptr),Y ; tile
   INY
