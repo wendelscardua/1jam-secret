@@ -75,3 +75,9 @@ puts 'keyframe_lt_h: .hibytes keyframe_lt'
   end.map { |byte| '$%02x' % byte }.join(', ')
   puts "keyframe_#{timestamp}: .byte #{bytes}"
 end
+
+clock_digits = (0..last_time_index).map { |i| index_to_timestamp(i).to_s.chars }
+                                   .transpose
+                                   .map
+                                   .with_index { |bytes, index| %Q{clock_digits_#{index}: .byte "#{bytes.join}"} }
+puts clock_digits
