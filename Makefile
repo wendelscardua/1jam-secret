@@ -21,6 +21,7 @@ debug: ${TARGET}
 
 src/${PROJECT}.o: src/${PROJECT}.s src/constants.inc src/mmc3-constants.inc src/header.inc \
 	src/vram-buffer.inc \
+	src/charmap.inc \
 	src/famitone2.s \
 	assets/bg-palettes.pal assets/sprite-palettes.pal \
         assets/metasprites.inc \

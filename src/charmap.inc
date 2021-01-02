@@ -3,7 +3,7 @@
   .charmap $60 + i, $40 + i
 .endrepeat
 
-.charmap $20, $1a
+.charmap $20, $01
 .charmap $2e, $0e
 
 .repeat 10, i
