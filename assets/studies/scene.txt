@@ -25,11 +25,11 @@
 20:10|d|i|H|E|i|e|d|e|e|4|
 20:20|G|E|h|e|C|H|G|H|e|3|
 20:30|g|e|h|e|c|h|g|h|A|1|
-20:40|C|e|A|H|c|h|g|h|a|2|   * C!
-20:50|c|H|a|h|c|h|g|h|a|2|   * C!
+20:40|C|e|A|H|c|h|g|h|a|2|   - c poisons v's drink
+20:50|c|H|a|h|c|h|g|h|a|2|   
 21:00|c|h|E|E|c|E|E|h|E|5|
-21:10|E|E|e|e|E|e|e|E|e|9|
-21:20|e|e|e|e|e|e|e|e|e|9|
+21:10|E|E|e|e|E|e|e|E|e|9|   - dinner
+21:20|e|e|e|e|e|e|e|e|e|9|   - dinner
 21:30|e|F|e|C|F|C|e|F|C|3|
 21:40|C|f|G|c|f|c|G|f|c|4|
 21:50|c|f|g|c|f|c|g|f|c|4|
