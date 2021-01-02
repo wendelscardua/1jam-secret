@@ -24,8 +24,8 @@
 20:00|d|I|i|d|i|E|d|E|E|3|
 20:10|d|i|H|E|i|e|d|e|e|4|
 20:20|G|E|h|e|C|H|G|H|e|3|
-20:30|g|e|A|e|c|h|g|h|e|1|
-20:40|C|e|a|H|c|h|g|h|A|2|   * C!
+20:30|g|e|h|e|c|h|g|h|A|1|
+20:40|C|e|A|H|c|h|g|h|a|2|   * C!
 20:50|c|H|a|h|c|h|g|h|a|2|   * C!
 21:00|c|h|E|E|c|E|E|h|E|5|
 21:10|E|E|e|e|E|e|e|E|e|9|
