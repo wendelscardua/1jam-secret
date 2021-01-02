@@ -5,7 +5,7 @@ require 'pry'
 
 data = YAML.safe_load File.read(ARGV[0])
 
-characters = 'AB'.each_char.with_index.to_h
+characters = 'ABCDEFGHV'.each_char.with_index.to_h
 rooms = 'zabcdefghi'.each_char.with_index.to_h
 fpm = 60
 
@@ -67,7 +67,8 @@ puts 'keyframe_lt_h: .hibytes keyframe_lt'
                          (1..2).map do |i|
                            delta = (timeline[index][character][i] - timeline[index + 1][character][i]).abs
                            delta = delta.to_f / fpm
-                           raise if delta.to_i > 0
+                           raise "Huge delta_#{i}: #{delta} at timestamp #{index_to_timestamp(index)}, char #{character}"  if delta.to_i > 0
+
                            (delta * 256).to_i
                          end
                        end
