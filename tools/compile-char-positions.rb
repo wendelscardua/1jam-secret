@@ -39,7 +39,7 @@ characters.each do |character, _|
         next_idx = indices.select { |idx| idx > time_index }.min
         room1, x1, y1 = char_data[prev_idx]
         room2, x2, y2 = char_data[next_idx]
-        raise "Invalid data for #{character}, missing between #{prev_idx} and #{next_idx}" if room1 != room2
+        raise "Invalid data for #{character}, missing between #{index_to_timestamp(prev_idx)} and #{index_to_timestamp(next_idx)}" if room1 != room2
 
         [
           rooms[room1],
