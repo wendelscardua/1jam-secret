@@ -501,6 +501,11 @@ etc:
   LDA pressed_buttons
   AND #BUTTON_START
   BEQ :+
+
+  ; TODO selectable language, english text
+  LDA #languages::portuguese
+  STA language
+
   ; DEBUG
   ; JSR go_to_investigating
   LDA #0
