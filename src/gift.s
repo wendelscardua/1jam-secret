@@ -508,11 +508,11 @@ etc:
 
   ; DEBUG
   ; JSR go_to_investigating
-  LDA #0
+  LDA #4
   STA alethioscope_character
-  LDA #0
+  LDA #((21-18)*60+10)
   STA alethioscope_current_frame
-  LDA #100
+  LDA #240
   STA alethioscope_target_frame
   JSR go_to_alethioscoping
   ; END OF DEBUG
