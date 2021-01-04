@@ -158,8 +158,8 @@ detective_x: .res 1
 detective_y: .res 1
 ; collision boxes for room exits (leading to map menu)
 exit_x1: .res 4
-exit_y1: .res 4
 exit_x2: .res 4
+exit_y1: .res 4
 exit_y2: .res 4
 end_investigation_stuff:
 
@@ -552,6 +552,11 @@ etc:
   RTS
 .endproc
 
+.proc go_to_map
+  KIL ; TODO
+  RTS
+.endproc
+
 ; at least alethioscope_character and alethioscope_current_frame must've been set beforehand
 .proc go_to_alethioscoping
   LDA #game_states::alethioscoping
@@ -738,10 +743,56 @@ etc:
   INC detective_x
 :
 
-  ; TODO: check exit collision
+  ; exit collision
+  LDX #3
+exit_loop:
 
-  ; TODO: check wall collision
+  LDA detective_x
+  CLC
+  ADC #$0e
+  CMP exit_x1, X
+  BCC next_exit_loop
 
+  LDA exit_x2, X
+  SEC
+  SBC #$01
+  CMP detective_x
+  BCC next_exit_loop
+
+  LDA detective_y
+  CLC
+  ADC #$0f
+  CMP exit_y1, X
+  BCC next_exit_loop
+
+  LDA exit_y2, X
+  CMP detective_y
+  BCC next_exit_loop
+
+  JSR go_to_map
+  RTS
+
+next_exit_loop:
+  DEX
+  BPL exit_loop
+
+  ; wall collision
+  LDA detective_x
+  CMP #$1f
+  BCC revert
+  CMP #$d2
+  BCS revert
+  LDA detective_y
+  CMP #$40
+  BCC revert
+  CMP #$c1
+  BCS revert
+  RTS
+revert:
+  LDA temp_x
+  STA detective_x
+  LDA temp_y
+  STA detective_y
   RTS
 .endproc
 
