@@ -1159,7 +1159,6 @@ palettes:
 .incbin "../assets/sprite-palettes.pal"
 
 nametable_title: .incbin "../assets/nametables/title.rle"
-nametable_main: .incbin "../assets/nametables/main.rle"
 nametable_prologue: .incbin "../assets/nametables/prologue.rle"
 nametable_help: .incbin "../assets/nametables/help.rle"
 
