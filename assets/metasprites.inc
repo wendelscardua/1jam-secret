@@ -79,6 +79,15 @@ metasprite_8_data:
 	.byte   4,- 8,$0d,1
 	.byte 128
 
+metasprite_9_data:
+
+	.byte   0,  0,$0e,0
+	.byte   8,  0,$0e,0|OAM_FLIP_H
+	.byte   0,  8,$02,0
+	.byte   8,  8,$02,0|OAM_FLIP_H
+	.byte   4,- 8,$0f,0
+	.byte 128
+
 metasprite_pointers:
 
 	.word metasprite_0_data
@@ -90,4 +99,5 @@ metasprite_pointers:
 	.word metasprite_6_data
 	.word metasprite_7_data
 	.word metasprite_8_data
+	.word metasprite_9_data
 
