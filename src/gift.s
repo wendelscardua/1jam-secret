@@ -787,7 +787,36 @@ next_exit_loop:
   BCC revert
   CMP #$c1
   BCS revert
+
+  ; character collision
+
+  LDA detective_x
+  CLC
+  ADC #$0f
+  CMP room_character_x
+  BCC no_character_collision
+
+  LDA room_character_x
+  CLC
+  ADC #$0f
+  CMP detective_x
+  BCC no_character_collision
+
+  LDA detective_y
+  CLC
+  ADC #$0f
+  CMP room_character_y
+  BCC no_character_collision
+
+  LDA room_character_y
+  CLC
+  ADC #$0f
+  CMP detective_y
+  BCC no_character_collision
+  JMP revert
+no_character_collision:
   RTS
+
 revert:
   LDA temp_x
   STA detective_x
