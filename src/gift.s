@@ -156,6 +156,8 @@ temp_flag: .res 1
 
 .enum game_states
   waiting_to_start
+  prologue
+  help
   investigating
   alethioscoping
   game_over
@@ -423,6 +425,84 @@ etc:
   RTS
 .endproc
 
+.proc go_to_prologue
+  LDA #game_states::prologue
+  STA game_state
+
+  ; erase sprites
+  LDX #$00
+  LDA #$F0
+:
+  STA oam_sprites+Sprite::ycoord, X
+  .repeat .sizeof(Sprite)
+  INX
+  .endrepeat
+  BNE :-
+
+  SCREEN_OFF
+
+  JSR load_palettes
+
+  JSR load_default_chr
+
+  LDA PPUSTATUS
+  LDA #$20
+  STA PPUADDR
+  LDA #$00
+  STA PPUADDR
+
+  LDA #<nametable_prologue
+  STA rle_ptr
+  LDA #>nametable_prologue
+  STA rle_ptr+1
+  JSR unrle
+
+  VBLANK
+
+  SCREEN_ON
+
+  RTS
+.endproc
+
+.proc go_to_help
+  LDA #game_states::help
+  STA game_state
+
+  ; erase sprites
+  LDX #$00
+  LDA #$F0
+:
+  STA oam_sprites+Sprite::ycoord, X
+  .repeat .sizeof(Sprite)
+  INX
+  .endrepeat
+  BNE :-
+
+  SCREEN_OFF
+
+  JSR load_palettes
+
+  JSR load_default_chr
+
+  LDA PPUSTATUS
+  LDA #$20
+  STA PPUADDR
+  LDA #$00
+  STA PPUADDR
+
+  LDA #<nametable_help
+  STA rle_ptr
+  LDA #>nametable_help
+  STA rle_ptr+1
+  JSR unrle
+
+  VBLANK
+
+  SCREEN_ON
+
+  RTS
+.endproc
+
 .proc go_to_investigating
   SCREEN_OFF
 
@@ -505,17 +585,39 @@ etc:
   ; TODO selectable language, english text
   LDA #languages::portuguese
   STA language
+  JSR go_to_prologue
+:
+  RTS
+.endproc
 
-  ; DEBUG
-  ; JSR go_to_investigating
-  LDA #4
-  STA alethioscope_character
-  LDA #((21-18)*60+10)
-  STA alethioscope_current_frame
-  LDA #240
-  STA alethioscope_target_frame
-  JSR go_to_alethioscoping
-  ; END OF DEBUG
+.proc prologue
+  JSR readjoy
+  LDA pressed_buttons
+  AND #(BUTTON_START|BUTTON_SELECT|BUTTON_A|BUTTON_B)
+  BEQ :+
+  JSR go_to_help
+:
+  RTS
+.endproc
+
+.proc help
+  JSR readjoy
+  LDA pressed_buttons
+  AND #(BUTTON_START|BUTTON_SELECT|BUTTON_A|BUTTON_B)
+  BEQ :+
+
+  ; TODO selectable language, english text
+  LDA #languages::portuguese
+  STA language
+
+  JSR go_to_investigating
+  ; LDA #4
+  ; STA alethioscope_character
+  ; LDA #((21-18)*60+10)
+  ; STA alethioscope_current_frame
+  ; LDA #240
+  ; STA alethioscope_target_frame
+  ; JSR go_to_alethioscoping
 :
   RTS
 .endproc
@@ -845,7 +947,7 @@ skip_read_target:
 
 .segment "RODATA"
 
-.define game_state_handlers waiting_to_start-1, investigating-1, alethioscoping-1, game_over-1
+.define game_state_handlers waiting_to_start-1, prologue-1, help-1, investigating-1, alethioscoping-1, game_over-1
 
 game_state_handlers_l: .lobytes game_state_handlers
 game_state_handlers_h: .hibytes game_state_handlers
@@ -856,6 +958,8 @@ palettes:
 
 nametable_title: .incbin "../assets/nametables/title.rle"
 nametable_main: .incbin "../assets/nametables/main.rle"
+nametable_prologue: .incbin "../assets/nametables/prologue.rle"
+nametable_help: .incbin "../assets/nametables/help.rle"
 
 ; room names
 .define room_strings $0000, $0000, \
