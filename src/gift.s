@@ -682,14 +682,76 @@ etc:
   STA addr_ptr
   LDA #>detective_metasprite
   STA addr_ptr+1
-  LDA detective_x, X
+  LDA detective_x
   STA temp_x
-  LDA detective_y, X
+  LDA detective_y
   STA temp_y
   JSR display_metasprite
 
   JSR erase_remaining_sprites
 
+  JSR readjoy
+  LDA buttons
+  AND #(BUTTON_LEFT|BUTTON_RIGHT|BUTTON_UP|BUTTON_DOWN)
+  BEQ :+
+  JSR move_detective
+  RTS
+:
+  LDA pressed_buttons
+  AND #BUTTON_A
+  BEQ :+
+  JSR talk
+  RTS
+:
+  LDA pressed_buttons
+  AND #BUTTON_B
+  BEQ :+
+  JSR accuse
+:
+  RTS
+.endproc
+
+.proc move_detective
+  LDA detective_x
+  STA temp_x
+  LDA detective_y
+  STA temp_y
+
+  LDA buttons
+  AND #BUTTON_UP
+  BEQ :+
+  DEC detective_y
+:
+  LDA buttons
+  AND #BUTTON_DOWN
+  BEQ :+
+  INC detective_y
+:
+  LDA buttons
+  AND #BUTTON_LEFT
+  BEQ :+
+  DEC detective_x
+:
+  LDA buttons
+  AND #BUTTON_RIGHT
+  BEQ :+
+  INC detective_x
+:
+
+  ; TODO: check exit collision
+
+  ; TODO: check wall collision
+
+  RTS
+.endproc
+
+.proc talk
+  KIL ; TODO
+  RTS
+.endproc
+
+.proc accuse
+  KIL ; TODO
   RTS
 .endproc
 
