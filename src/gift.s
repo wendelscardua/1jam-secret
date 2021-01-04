@@ -124,11 +124,13 @@ language: .res 1
 
 sprite_counter: .res 1
 
+; room stuff
+current_room: .res 1
+
 ; alethioscope stuff
 alethioscope_character: .res 1
 alethioscope_current_frame: .res 1
 alethioscope_target_frame: .res 1
-alethioscope_current_room: .res 1
 alethioscope_frame_ptr: .res 2
 alethioscope_frame_counter: .res 1
 
@@ -142,6 +144,24 @@ character_delta_sx: .res NUM_CHARACTERS
 character_delta_sy: .res NUM_CHARACTERS
 character_target_x: .res NUM_CHARACTERS
 character_target_y: .res NUM_CHARACTERS
+
+;;;; investigation stuff
+detective_room: .res 1
+; HACK: same data order as in room metadata (so it's easier to load)
+begin_investigation_stuff:
+; character present in room
+room_character: .res 1
+room_character_x: .res 1
+room_character_y: .res 1
+; detective coordinates
+detective_x: .res 1
+detective_y: .res 1
+; collision boxes for room exits (leading to map menu)
+exit_x1: .res 4
+exit_y1: .res 4
+exit_x2: .res 4
+exit_y2: .res 4
+end_investigation_stuff:
 
 ; temp string
 
@@ -523,19 +543,9 @@ etc:
 
   JSR load_default_chr
 
-  LDA PPUSTATUS
-  LDA #$20
-  STA PPUADDR
-  LDA #$00
-  STA PPUADDR
-
-  LDA #<nametable_main
-  STA rle_ptr
-  LDA #>nametable_main
-  STA rle_ptr+1
-  JSR unrle
-
-  ; game setup here
+  LDA detective_room
+  JSR load_room
+  JSR load_investigation_stuff
 
   ; PLAY CanonInD
 
@@ -610,6 +620,8 @@ etc:
   LDA #languages::portuguese
   STA language
 
+  JSR game_setup
+
   JSR go_to_investigating
   ; LDA #4
   ; STA alethioscope_character
@@ -640,6 +652,14 @@ etc:
   BEQ :+
   JSR go_to_title
 :
+  RTS
+.endproc
+
+; things to set before first call to "go_to_investigating"
+.proc game_setup
+  ; initial room
+  LDA #2 ; hall
+  STA detective_room
   RTS
 .endproc
 
@@ -724,7 +744,7 @@ next:
   LDX #0
 loop:
   LDA character_room, X
-  CMP alethioscope_current_room
+  CMP current_room
   BNE next
   LDA character_sprites_l, X
   STA addr_ptr
@@ -873,7 +893,7 @@ next_frame_loop:
 skip_read_target:
   LDX alethioscope_character
   LDA character_room, X
-  JSR load_alethioscoping_room
+  JSR load_room
 
   LDX alethioscope_current_frame
   LDA clock_digits_0, X
@@ -891,13 +911,13 @@ skip_read_target:
 .endproc
 
 ; input: A = desired room
-; if alethioscope_current_room != A, change it to A then loads nametable
-.proc load_alethioscoping_room
-  CMP alethioscope_current_room
+; if current_room != A, change it to A then loads nametable
+.proc load_room
+  CMP current_room
   BNE :+
   RTS
 :
-  STA alethioscope_current_room
+  STA current_room
   SCREEN_OFF
 
   LDA PPUSTATUS
@@ -906,7 +926,7 @@ skip_read_target:
   LDA #$00
   STA PPUADDR
 
-  LDX alethioscope_current_room
+  LDX current_room
   LDA room_pointers_l, X
   STA rle_ptr
   LDA room_pointers_h, X
@@ -920,7 +940,7 @@ skip_read_target:
   LDA #$44
   STA vram_buffer, X
   INX
-  LDA alethioscope_current_room
+  LDA current_room
   ASL
   CLC
   ADC language
@@ -939,6 +959,21 @@ skip_read_target:
 
   SCREEN_ON
 
+  RTS
+.endproc
+
+.proc load_investigation_stuff
+  LDX detective_room
+  LDA room_metadata_pointers_l, X
+  STA addr_ptr
+  LDA room_metadata_pointers_h, X
+  STA addr_ptr+1
+  LDY #(end_investigation_stuff-begin_investigation_stuff-1)
+loop:
+  LDA (addr_ptr), Y
+  STA begin_investigation_stuff, Y
+  DEY
+  BPL loop
   RTS
 .endproc
 
@@ -995,6 +1030,9 @@ string_ballroom_pt: .byte "Salao de festas", $00 ; TODO diacritics
 string_kitchen_en: .byte "Kitchen", $00
 string_kitchen_pt: .byte "Cozinha", $00
 
+string_now_en: .byte $01, "Present", $00
+string_now_pt: .byte "Presente", $00
+
 ; rooms:
 .define room_pointers $0000, \
                       nametable_study, nametable_hall, nametable_lounge, nametable_library, \
@@ -1013,11 +1051,89 @@ nametable_conservatory: .incbin "../assets/nametables/conservatory.rle"
 nametable_ballroom: .incbin "../assets/nametables/ballroom.rle"
 nametable_kitchen: .incbin "../assets/nametables/kitchen.rle"
 
+; rooms - investigation metadata
+.define room_metadata_pointers $0000, \
+                               study_metadata, hall_metadata, lounge_metadata, library_metadata, \
+                               dining_room_metadata, billiard_room_metadata, conservatory_metadata, ballroom_metadata, \
+                               kitchen_metadata
+room_metadata_pointers_l: .lobytes room_metadata_pointers
+room_metadata_pointers_h: .hibytes room_metadata_pointers
+
+; metadata format:
+; hitboxes for exits (4 x1, 4 x2, 4 y1, 4y2)
+; room character, followed by x, y coordinates
+; detective initial x, y coordinates
+
+study_metadata:
+  .byte $1, $60, $68
+  .byte $b0, $b0
+  .byte $a0, $00, $00, $00
+  .byte $cf, $00, $00, $00
+  .byte $d0, $00, $00, $00
+  .byte $e8, $00, $00, $00
+hall_metadata:
+  .byte $0, $c0, $a0
+  .byte $70, $80
+  .byte $00, $60, $00, $00
+  .byte $1f, $9f, $00, $00
+  .byte $80, $d0, $00, $00
+  .byte $af, $e8, $00, $00
+lounge_metadata:
+  .byte $9, $70, $80
+  .byte $40, $b0
+  .byte $30, $00, $00, $00
+  .byte $6f, $00, $00, $00
+  .byte $d0, $00, $00, $00
+  .byte $e8, $00, $00, $00
+library_metadata:
+  .byte $2, $b0, $50
+  .byte $c0, $90
+  .byte $60, $e0, $00, $00
+  .byte $9f, $ff, $00, $00
+  .byte $d0, $60, $00, $00
+  .byte $e8, $9f, $00, $00 
+dining_room_metadata:
+  .byte $3, $88, $60
+  .byte $30, $40
+  .byte $00, $30, $00, $00
+  .byte $1f, $5f, $00, $00
+  .byte $50, $20, $00, $00
+  .byte $7f, $3f, $00, $00 
+billiard_room_metadata:
+  .byte $4, $20, $80
+  .byte $38, $50
+  .byte $30, $e0, $00, $00
+  .byte $5f, $ff, $00, $00
+  .byte $20, $a0, $00, $00
+  .byte $3f, $bf, $00, $00
+conservatory_metadata:
+  .byte $5, $58, $b0
+  .byte $b8, $60
+  .byte $e0, $00, $00, $00
+  .byte $ff, $00, $00, $00
+  .byte $40, $00, $00, $00
+  .byte $6f, $00, $00, $00
+ballroom_metadata:
+  .byte $6, $a0, $c0
+  .byte $30, $50
+  .byte $00, $e0, $30, $b0
+  .byte $1f, $ff, $4f, $cf
+  .byte $70, $70, $20, $20
+  .byte $9f, $9f, $3f, $3f
+kitchen_metadata:
+  .byte $7, $b0, $98
+  .byte $40, $50
+  .byte $30, $00, $00, $00
+  .byte $5f, $00, $00, $00
+  .byte $20, $00, $00, $00
+  .byte $3f, $00, $00, $00
+
 .include "../assets/metasprites.inc"
 
+; A..H + V + ded V
 .define character_sprites metasprite_0_data, metasprite_1_data, metasprite_2_data, metasprite_3_data, \
                           metasprite_4_data, metasprite_5_data, metasprite_6_data, metasprite_7_data, \
-                          metasprite_8_data
+                          metasprite_8_data, metasprite_9_data
 
 character_sprites_l: .lobytes character_sprites
 character_sprites_h: .hibytes character_sprites
