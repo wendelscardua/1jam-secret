@@ -664,7 +664,32 @@ etc:
 .endproc
 
 .proc investigating
-  KIL ; TODO
+  LDA #0
+  STA sprite_counter
+  LDX room_character
+
+  LDA character_sprites_l, X
+  STA addr_ptr
+  LDA character_sprites_h, X
+  STA addr_ptr+1
+  LDA room_character_x, X
+  STA temp_x
+  LDA room_character_y, X
+  STA temp_y
+  JSR display_metasprite
+
+  LDA #<detective_metasprite
+  STA addr_ptr
+  LDA #>detective_metasprite
+  STA addr_ptr+1
+  LDA detective_x, X
+  STA temp_x
+  LDA detective_y, X
+  STA temp_y
+  JSR display_metasprite
+
+  JSR erase_remaining_sprites
+
   RTS
 .endproc
 
@@ -1137,6 +1162,8 @@ kitchen_metadata:
 
 character_sprites_l: .lobytes character_sprites
 character_sprites_h: .hibytes character_sprites
+
+detective_metasprite = metasprite_10_data
 
 .include "../assets/char-positions.inc"
 
