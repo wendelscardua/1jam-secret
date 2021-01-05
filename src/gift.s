@@ -274,9 +274,9 @@ clear_ram:
   INX
   BNE clear_ram
 
-  ; horizontal mirroring (fix for everdrive)
-  LDA #%00000001
-  STA $a000
+  ; vertical mirroring (fix for everdrive)
+  LDA #%00000000
+  STA MIRRORING
 
   ; enable PRG RAM
   LDA #%10000000
