@@ -1572,32 +1572,6 @@ detective_metasprite = metasprite_10_data
 
 .include "../assets/char-positions.inc"
 
-; masks for more efficient ranged rand
-rand_mask:
-.byte %00000000 ; <= 0
-.byte %00000001 ; <= 1
-.repeat 2
-.byte %00000011 ; <= 2, 3
-.endrepeat
-.repeat 4
-.byte %00000111 ; <= 4..7
-.endrepeat
-.repeat 8
-.byte %00001111 ; <= 8..15
-.endrepeat
-.repeat 16
-.byte %00011111 ; <= 16..31
-.endrepeat
-.repeat 32
-.byte %00111111 ; <= 32..65
-.endrepeat
-.repeat 64
-.byte %01111111 ; <= 64..127
-.endrepeat
-.repeat 128
-.byte %11111111 ; <= 128..255
-.endrepeat
-
 .segment "CHR"
 .incbin "../assets/chr/bg-4k-main.chr"
 .incbin "../assets/chr/sprites-4k.chr"
