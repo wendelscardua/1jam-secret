@@ -92,14 +92,16 @@ puts 'alethioscope_data_pointers_h: .hibytes alethioscope_data_pointers'
 # check memory_data consistency
 checklist = Array.new(last_time_index + 1) { Array.new(8) { '.' } }
 
-memory_data.each_with_index do |(_character, ranges), char_index|
-  ranges.flat_map { |range| (range[0]..range[1]).to_a }
-        .map { |frame| timestamp_to_index(frame) }
+memory_data.each do |character, ranges|
+  ranges.flat_map { |range| (timestamp_to_index(range[0])..timestamp_to_index(range[1])).to_a }
         .each do |frame|
     # mark an "x" for every character/frame in the same room as this character/frame
-    char_room = timeline[frame][char_index * 5]
-    (0..7).each do |other_char_index|
-      checklist[frame][other_char_index] = 'x' if timeline[frame][other_char_index * 5] == char_room
+    char_room = timeline[frame][character][0]
+    ('A'..'H').each_with_index do |other_character, other_char_index|
+      if timeline[frame][other_character][0] == char_room ||
+         timeline[frame][other_character][0] == 0 # outside doesn't matter
+        checklist[frame][other_char_index] = 'x'
+      end
     end
   end
 end

@@ -38,3 +38,69 @@
 # Alethioscope allows the detective to see a 30min (?) segment of time focused on a person's memory
 # - each person can be focused only 3 times - if we try to use the alethioscope for a fourth time, it will
 #   stop working for a few days (so it should be used only to point the culprit)
+
+# Memories
+
+# A
+- cheguei primeiro, ao mesmo tempo que B, 18:00 em ponto
+- por volta das 19:20 senti um aroma bem perfumado na estufa,
+  encontrei uma flor que não conhecia.
+- trombei com G na biblioteca por volta das 19:40, como é
+  botânico ajudou a pesquisar sobre a flor
+  
+# B
+- uns 4 chegaram ao mesmo tempo la pelas 18:20, achei legal porque
+  pudemos ir pro salao de jogos em seguida
+- pouco depois, pelas 19:30, dei um pulo no salão de festas
+  pra dançar um pouco com C.
+- como gostei do salão de jogos fui com o pessoal la umas 21:30
+  pra última jogatina da noite.
+# C
+- fui ver a Estufa com A por volta das 18:50, tinha
+  umas flores bem lindas lá
+- tava na cozinha umas 20:00 quando ouvi uma musica legal
+  vindo do salão de festas, fui pra lá logo depois
+- Como G e eu gostamos muito da Estufa, fomos dar
+  uma última volta lá antes do fim da noite, umas
+  21:30
+
+# D
+- achei engraçado que dei uma passada no escritorio
+  umas 19:20 pra espairecer, e E teve a mesma ideia
+- por volta das 20:10 fiquei curioso com como estava
+  a decoração da sala de jantar e passei lá
+- estava estufado de bolo, então pelas 21:30 fui
+  pra sala de estar bater papo com Agatha e F
+
+# E
+- cheguei com sede entao fui pra cozinha
+  beber agua umas 18:20
+- depois de conversar com D eu comecei a me sentir mal,
+  então fui pra cozinha umas 19:50 tomar água e respirar um pouco
+- tive uma crise de ansiedade por volta das 20:20,
+  fui ficar um tempo sozinho na sala de estar pra ver
+  se melhorava
+
+# F
+- fui pra cozinha beber agua umas 18:40 e senti o cheiro
+  do bolo que estava guardado la.
+- pelas 20:00 eu ajudei Lady Agatha a colocar o bolo na sala de jantar,
+  ele me deu muita fome mas aguentei até a hora certa.
+- fomos pra sala de jantar cortar o bolo as 21:00,
+  ele era bem gostoso afinal
+
+
+# G
+- fiz uma jogada muito boa no salao de jogos, por volta das 19:10
+
+- após a pesquisa fiquei curioso e precisava visitar a estufa, o
+  que fiz por volta das 20:20
+
+# H
+- Fui jogar um pouco no salão de jogos por volta das 18:40
+  mas senti que era muito ruim naquilo e saí pouco depois
+- Observei enquanto F ajudava Agatha a buscar e ajeitar o bolo umas 19:30,
+  a aparência dele era ótima
+- Ouvi minha musica preferida tocando no salao
+  de festas, entao dei um pulo la pra dançar umas
+  20:20
