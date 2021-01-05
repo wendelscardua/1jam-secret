@@ -59,7 +59,7 @@ string:
   LDY #0
 strloop:
   LDA (str_ptr), Y
-  BEQ exit_loop
+  BEQ loop
   STA PPUDATA
   INY
   JMP strloop

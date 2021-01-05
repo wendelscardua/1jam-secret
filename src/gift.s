@@ -936,7 +936,9 @@ revert:
   STA oam_sprites+Sprite::flag + 2 * .sizeof(Sprite)
   LDA #(3 | OAM_FLIP_H | OAM_FLIP_V)
   STA oam_sprites+Sprite::flag + 3 * .sizeof(Sprite)
-  
+
+  JSR display_now_string
+
   ; write current selected name
   vram_buffer_alloc 5
   LDA #($20 | $80)
@@ -959,7 +961,19 @@ revert:
   LDA #$00
   STA vram_buffer, X
   STX vram_buffer_sp
+
   RTS
+.endproc
+
+.proc display_now_string
+   LDA language
+   CMP #languages::portuguese
+   BEQ pt
+   write_string_to_vram $2057, string_now_en
+   RTS
+pt:
+   write_string_to_vram $2057, string_now_pt
+   RTS
 .endproc
 
 .proc alethioscoping
@@ -1227,6 +1241,11 @@ skip_read_target:
   STA rle_ptr+1
   JSR unrle
 
+  LDA game_state
+  CMP #game_states::alethioscoping
+  BEQ :+
+  JSR display_now_string
+:
   vram_buffer_alloc 5
   LDA #($20 | $80)
   STA vram_buffer, X
@@ -1325,8 +1344,8 @@ string_ballroom_pt:      .byte "Salao de festas", $00 ; TODO diacritics
 string_kitchen_en:       .byte "Kitchen        ", $00
 string_kitchen_pt:       .byte "Cozinha        ", $00
 
-string_now_en: .byte " Present", $00
-string_now_pt: .byte "Presente", $00
+string_now_en: .byte "  Now", $00
+string_now_pt: .byte "Agora", $00
 
 ; rooms:
 .define room_pointers $0000, \
