@@ -45,8 +45,8 @@ assets/audio/sfx.nsf: assets/audio/sfx.ftm
 assets/audio/sfx.s: assets/audio/sfx.nsf
 	${NSF2DATA} assets/audio/sfx.nsf -ca65 -ntsc
 
-assets/char-positions.inc: assets/char-positions.yaml tools/compile-char-positions.rb
-	ruby tools/compile-char-positions.rb assets/char-positions.yaml > assets/char-positions.inc
+assets/char-positions.inc: assets/char-positions.yaml assets/memory-data.yaml tools/compile-char-positions.rb
+	ruby tools/compile-char-positions.rb assets/char-positions.yaml assets/memory-data.yaml > assets/char-positions.inc
 
 %.o: %.s
 	ca65 $< ${CA65_FLAGS}
