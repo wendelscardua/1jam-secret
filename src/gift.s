@@ -751,6 +751,7 @@ etc:
 .proc investigating
   LDA #0
   STA sprite_counter
+
   LDX room_character
 
   LDA character_sprites_l, X
@@ -775,6 +776,12 @@ etc:
 
   JSR erase_remaining_sprites
 
+  LDA dialogue_active
+  BEQ :+
+  JSR dialogue_handler
+  RTS
+:
+
   JSR readjoy
   LDA buttons
   AND #(BUTTON_LEFT|BUTTON_RIGHT|BUTTON_UP|BUTTON_DOWN)
@@ -782,17 +789,21 @@ etc:
   JSR move_detective
   RTS
 :
-  LDA pressed_buttons
+  LDA released_buttons
   AND #BUTTON_A
   BEQ :+
   JSR talk
   RTS
 :
-  LDA pressed_buttons
+  LDA released_buttons
   AND #BUTTON_B
   BEQ :+
   JSR accuse
 :
+  RTS
+.endproc
+
+.proc dialogue_handler
   RTS
 .endproc
 
@@ -905,7 +916,45 @@ revert:
   RTS
 .endproc
 
+; return nonzero flag if detective is near the character
+.proc near_room_character
+
+  LDA detective_x
+  CLC
+  ADC #$1f
+  CMP room_character_x
+  BCC far_from_character
+
+  LDA room_character_x
+  CLC
+  ADC #$1f
+  CMP detective_x
+  BCC far_from_character
+
+  LDA detective_y
+  CLC
+  ADC #$1f
+  CMP room_character_y
+  BCC far_from_character
+
+  LDA room_character_y
+  CLC
+  ADC #$1f
+  CMP detective_y
+  BCC far_from_character
+
+  LDA #$01
+  RTS
+far_from_character:
+  LDA #$0
+  RTS
+.endproc
+
 .proc talk
+  JSR near_room_character
+  BNE :+
+  RTS
+:
   LDA #$01
   STA dialogue_active
   RTS
@@ -1161,7 +1210,7 @@ loop:
   LDA dialogue_active
   BEQ :+
   LDA oam_sprites+Sprite::ycoord,X
-  CMP #DIALOGUE_Y
+  CMP #(DIALOGUE_Y - 8)
   BCC :+
   INY
   INY
