@@ -69,6 +69,7 @@ FT_DPCM_OFF=$c000
 LAST_FRAME = 240
 NUM_CHARACTERS = 9
 FRAMES_PER_ALETHIOSCOPE_MINUTE = 60
+DIALOGUE_Y = $a0
 
 .enum direction
   up
@@ -163,6 +164,9 @@ exit_y1: .res 4
 exit_y2: .res 4
 end_investigation_stuff:
 
+; dialogue stuff
+dialogue_active: .res 1
+
 ; temp string
 
 clock_string: .res 6
@@ -230,6 +234,18 @@ vblankwait:
 .endmacro
 
 .proc irq_handler
+  STA IRQ_DISABLE
+  save_regs
+  LDA dialogue_active
+  BEQ no_scroll
+  LDX #$10
+: DEX
+  BPL :-
+  LDA PPUSTATUS
+  LDA #%10001001  ; turn on NMIs, sprites use second pattern table; change nametable
+  STA PPUCTRL  
+no_scroll:
+  restore_regs
   RTI
 .endproc
 
@@ -238,6 +254,12 @@ vblankwait:
   INC nmis
   JSR flush_vram_buffer
   JSR refresh_oam
+  ; enable irq for dialogue box
+  STA IRQ_DISABLE
+  LDA #DIALOGUE_Y
+  STA IRQ_LATCH
+  STA IRQ_RELOAD
+  STA IRQ_ENABLE
   ; reset ppuaddr
   BIT PPUSTATUS
   JSR set_scroll
@@ -303,13 +325,17 @@ clear_ram:
   LDA #$73
   STA rng_seed+1
 
-  SEI ; disable interrupts
+  CLI ; enable interrupts
 
   ; prepare clock string
   LDA #$1a
   STA clock_string+2
   LDA #$00
   STA clock_string+5
+
+  ; turn off dialogue
+  LDA #$00
+  STA dialogue_active
 
   JSR go_to_title
 
@@ -335,6 +361,9 @@ etc:
 .endproc
 
 .proc set_scroll
+  LDA PPUSTATUS
+  LDA #%10001000  ; turn on NMIs, sprites use second pattern table; reset nametable
+  STA PPUCTRL  
   LDA #$00
   STA PPUSCROLL
   STA PPUSCROLL
@@ -877,7 +906,8 @@ revert:
 .endproc
 
 .proc talk
-  KIL ; TODO
+  LDA #$01
+  STA dialogue_active
   RTS
 .endproc
 
@@ -1117,6 +1147,7 @@ loop:
   SBC #$01
   CLC
   ADC temp_y
+  STA oam_sprites+Sprite::ycoord,X
 
   ; trying to skip offscreen tiles
   CMP #$20
@@ -1126,7 +1157,17 @@ loop:
   JMP loop
 :
 
-  STA oam_sprites+Sprite::ycoord,X
+  ; avoid drawing over dialogue box
+  LDA dialogue_active
+  BEQ :+
+  LDA oam_sprites+Sprite::ycoord,X
+  CMP #DIALOGUE_Y
+  BCC :+
+  INY
+  INY
+  JMP loop
+:
+  
   LDA (addr_ptr),Y ; tile
   INY
   STA oam_sprites+Sprite::tile,X
@@ -1389,9 +1430,9 @@ room_metadata_pointers_l: .lobytes room_metadata_pointers
 room_metadata_pointers_h: .hibytes room_metadata_pointers
 
 ; metadata format:
-; hitboxes for exits (4 x1, 4 x2, 4 y1, 4y2)
 ; room character, followed by x, y coordinates
 ; detective initial x, y coordinates
+; hitboxes for exits (4 x1, 4 x2, 4 y1, 4y2)
 
 study_metadata:
   .byte $1, $60, $68
