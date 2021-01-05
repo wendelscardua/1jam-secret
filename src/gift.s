@@ -179,6 +179,7 @@ temp_flag: .res 1
   prologue
   help
   investigating
+  mansion_map
   alethioscoping
   game_over
 .endenum
@@ -553,7 +554,43 @@ etc:
 .endproc
 
 .proc go_to_map
-  KIL ; TODO
+  SCREEN_OFF
+
+  LDA #game_states::mansion_map
+  STA game_state
+
+  ; erase sprites
+  LDX #$00
+  LDA #$F0
+:
+  STA oam_sprites+Sprite::ycoord, X
+  .repeat .sizeof(Sprite)
+  INX
+  .endrepeat
+  BNE :-
+
+  JSR load_palettes
+
+  JSR load_default_chr
+
+  LDA PPUSTATUS
+  LDA #$20
+  STA PPUADDR
+  LDA #$00
+  STA PPUADDR
+
+  LDA #<nametable_map
+  STA rle_ptr
+  LDA #>nametable_map
+  STA rle_ptr+1
+  JSR unrle
+
+  VBLANK
+
+  SCREEN_ON
+
+  ; PLAY CanonInD
+
   RTS
 .endproc
 
@@ -677,9 +714,9 @@ etc:
   STA addr_ptr
   LDA character_sprites_h, X
   STA addr_ptr+1
-  LDA room_character_x, X
+  LDA room_character_x
   STA temp_x
-  LDA room_character_y, X
+  LDA room_character_y
   STA temp_y
   JSR display_metasprite
 
@@ -832,6 +869,96 @@ revert:
 
 .proc accuse
   KIL ; TODO
+  RTS
+.endproc
+
+.proc mansion_map
+  LDX detective_room
+
+  JSR readjoy
+  LDA pressed_buttons
+  AND #BUTTON_UP
+  BEQ :+
+  LDA mansion_map_up, X
+  STA detective_room
+:
+  LDA pressed_buttons
+  AND #BUTTON_DOWN
+  BEQ :+
+  LDA mansion_map_down, X
+  STA detective_room
+:
+  LDA pressed_buttons
+  AND #BUTTON_LEFT
+  BEQ :+
+  LDA mansion_map_left, X
+  STA detective_room
+:
+  LDA pressed_buttons
+  AND #BUTTON_RIGHT
+  BEQ :+
+  LDA mansion_map_right, X
+  STA detective_room
+:
+  LDA pressed_buttons
+  AND #(BUTTON_A|BUTTON_B|BUTTON_SELECT|BUTTON_START)
+  BEQ :+
+  LDA #0
+  STA current_room
+  JSR go_to_investigating
+  RTS
+:
+
+  LDA #4
+  STA sprite_counter
+  LDA mansion_map_cursor_x1, X
+  STA oam_sprites+Sprite::xcoord + 0 * .sizeof(Sprite)
+  STA oam_sprites+Sprite::xcoord + 2 * .sizeof(Sprite)
+  LDA mansion_map_cursor_y1, X
+  STA oam_sprites+Sprite::ycoord + 0 * .sizeof(Sprite)
+  STA oam_sprites+Sprite::ycoord + 1 * .sizeof(Sprite)
+  LDA mansion_map_cursor_x2, X
+  STA oam_sprites+Sprite::xcoord + 1 * .sizeof(Sprite)
+  STA oam_sprites+Sprite::xcoord + 3 * .sizeof(Sprite)
+  LDA mansion_map_cursor_y2, X
+  STA oam_sprites+Sprite::ycoord + 2 * .sizeof(Sprite)
+  STA oam_sprites+Sprite::ycoord + 3 * .sizeof(Sprite)
+  LDA #$11 ; cursor tile
+  .repeat 4, i
+  STA oam_sprites+Sprite::tile + i * .sizeof(Sprite)
+  .endrepeat
+
+  LDA #3
+  STA oam_sprites+Sprite::flag + 0 * .sizeof(Sprite)
+  LDA #(3 | OAM_FLIP_H)
+  STA oam_sprites+Sprite::flag + 1 * .sizeof(Sprite)
+  LDA #(3 | OAM_FLIP_V)
+  STA oam_sprites+Sprite::flag + 2 * .sizeof(Sprite)
+  LDA #(3 | OAM_FLIP_H | OAM_FLIP_V)
+  STA oam_sprites+Sprite::flag + 3 * .sizeof(Sprite)
+  
+  ; write current selected name
+  vram_buffer_alloc 5
+  LDA #($20 | $80)
+  STA vram_buffer, X
+  INX
+  LDA #$44
+  STA vram_buffer, X
+  INX
+  LDA detective_room
+  ASL
+  CLC
+  ADC language
+  TAY
+  LDA room_strings_l, Y
+  STA vram_buffer, X
+  INX
+  LDA room_strings_h, Y
+  STA vram_buffer, X
+  INX
+  LDA #$00
+  STA vram_buffer, X
+  STX vram_buffer_sp
   RTS
 .endproc
 
@@ -1149,7 +1276,8 @@ loop:
 
 .segment "RODATA"
 
-.define game_state_handlers waiting_to_start-1, prologue-1, help-1, investigating-1, alethioscoping-1, game_over-1
+.define game_state_handlers waiting_to_start-1, prologue-1, help-1, investigating-1, \
+                            mansion_map-1, alethioscoping-1, game_over-1
 
 game_state_handlers_l: .lobytes game_state_handlers
 game_state_handlers_h: .hibytes game_state_handlers
@@ -1161,6 +1289,7 @@ palettes:
 nametable_title: .incbin "../assets/nametables/title.rle"
 nametable_prologue: .incbin "../assets/nametables/prologue.rle"
 nametable_help: .incbin "../assets/nametables/help.rle"
+nametable_map: .incbin "../assets/nametables/map.rle"
 
 ; room names
 .define room_strings $0000, $0000, \
@@ -1177,26 +1306,26 @@ nametable_help: .incbin "../assets/nametables/help.rle"
 room_strings_l: .lobytes room_strings
 room_strings_h: .hibytes room_strings
 
-string_study_en: .byte "Study", $00
-string_study_pt: .byte "Escritorio", $00 ; TODO diacritics
-string_hall_en:
-string_hall_pt: .byte "Hall", $00
-string_lounge_en: .byte "Lounge", $00
-string_lounge_pt: .byte "Sala de estar", $00
-string_library_en: .byte "Library", $00
-string_libray_pt: .byte "Biblioteca", $00
-string_dining_room_en: .byte "Dining room", $00
-string_dining_room_pt: .byte "Sala de jantar", $00
-string_billiard_room_en: .byte "Billiard room", $00
-string_billiard_room_pt: .byte "Salao de jogos", $00 ; TODO diacritics
-string_conservatory_en: .byte "Conservatory", $00
-string_conservatory_pt: .byte "Estufa", $00
-string_ballroom_en: .byte "Ballroom", $00
-string_ballroom_pt: .byte "Salao de festas", $00 ; TODO diacritics
-string_kitchen_en: .byte "Kitchen", $00
-string_kitchen_pt: .byte "Cozinha", $00
+string_study_en:         .byte "Study          ", $00
+string_study_pt:         .byte "Escritorio     ", $00 ; TODO diacritics
+string_hall_en:          .byte "Hall           ", $00
+string_hall_pt:          .byte "Hall           ", $00
+string_lounge_en:        .byte "Lounge         ", $00
+string_lounge_pt:        .byte "Sala de estar  ", $00
+string_library_en:       .byte "Library        ", $00
+string_libray_pt:        .byte "Biblioteca     ", $00
+string_dining_room_en:   .byte "Dining room    ", $00
+string_dining_room_pt:   .byte "Sala de jantar ", $00
+string_billiard_room_en: .byte "Billiard room_ ", $00
+string_billiard_room_pt: .byte "Salao de jogos ", $00 ; TODO diacritics
+string_conservatory_en:  .byte "Conservatory   ", $00
+string_conservatory_pt:  .byte "Estufa         ", $00
+string_ballroom_en:      .byte "Ballroom       ", $00
+string_ballroom_pt:      .byte "Salao de festas", $00 ; TODO diacritics
+string_kitchen_en:       .byte "Kitchen        ", $00
+string_kitchen_pt:       .byte "Cozinha        ", $00
 
-string_now_en: .byte $01, "Present", $00
+string_now_en: .byte " Present", $00
 string_now_pt: .byte "Presente", $00
 
 ; rooms:
@@ -1293,6 +1422,17 @@ kitchen_metadata:
   .byte $5f, $00, $00, $00
   .byte $20, $00, $00, $00
   .byte $3f, $00, $00, $00
+
+;                              0    1    2    3    4    5    6    7    8    9
+mansion_map_up:        .byte $00, $01, $02, $03, $01, $02, $04, $06, $05, $05
+mansion_map_down:      .byte $00, $04, $05, $05, $06, $08, $07, $07, $08, $09
+mansion_map_left:      .byte $00, $01, $01, $02, $04, $04, $06, $07, $07, $08
+mansion_map_right:     .byte $00, $02, $03, $03, $05, $05, $05, $08, $09, $09
+
+mansion_map_cursor_x1: .byte $00, $10, $58, $b8, $10, $80, $10, $10, $60, $b0
+mansion_map_cursor_y1: .byte $00, $2f, $2f, $2f, $5f, $6f, $8f, $bf, $af, $bf
+mansion_map_cursor_x2: .byte $00, $38, $a0, $e8, $48, $c8, $48, $48, $98, $e8
+mansion_map_cursor_y2: .byte $00, $47, $57, $57, $77, $97, $a7, $d7, $d7, $d7
 
 .include "../assets/metasprites.inc"
 
