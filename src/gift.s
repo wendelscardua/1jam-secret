@@ -437,6 +437,20 @@ etc:
   STA rle_ptr+1
   JSR unrle
 
+  ; leave dialogue preset on second nametable
+  LDA PPUSTATUS
+  LDA #$28
+  STA PPUADDR
+  LDA #$00
+  STA PPUADDR
+
+  LDA #<nametable_dialogue_box
+  STA rle_ptr
+  LDA #>nametable_dialogue_box
+  STA rle_ptr+1
+  JSR unrle
+
+
   VBLANK
 
   SCREEN_ON
@@ -1309,6 +1323,7 @@ nametable_title: .incbin "../assets/nametables/title.rle"
 nametable_prologue: .incbin "../assets/nametables/prologue.rle"
 nametable_help: .incbin "../assets/nametables/help.rle"
 nametable_map: .incbin "../assets/nametables/map.rle"
+nametable_dialogue_box: .incbin "../assets/nametables/dialogue-box.rle"
 
 ; room names
 .define room_strings $0000, $0000, \
