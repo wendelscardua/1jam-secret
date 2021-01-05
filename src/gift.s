@@ -439,7 +439,7 @@ etc:
 
   ; leave dialogue preset on second nametable
   LDA PPUSTATUS
-  LDA #$28
+  LDA #$24
   STA PPUADDR
   LDA #$00
   STA PPUADDR
