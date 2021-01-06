@@ -970,9 +970,9 @@ far_from_character:
   BNE :+
   ; init dialogue
   LDX room_character
-  LDA character_dialogues_l
+  LDA character_dialogues_l, X
   STA addr_ptr
-  LDA character_dialogues_h
+  LDA character_dialogues_h, X
   STA addr_ptr+1
   LDY #7
 @loop:
