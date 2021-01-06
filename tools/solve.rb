@@ -171,7 +171,7 @@ loop do
     puts population.map { |pop| pop[1] }.inspect
     if current_score > best
       File.open('./best-so-far.yaml', 'wb') do |f|
-        f.write gene_to_data(population.first[0].map { |i| [index_to_timestamp(i.begin), index_to_timestamp(i.end)] }).to_yaml
+        f.write gene_to_data(population.first[0].map { |i| [index_to_timestamp(i.begin), index_to_timestamp(i.end)] }).to_h.to_yaml
       end
     end
     best = current_score
