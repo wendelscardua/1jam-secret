@@ -166,6 +166,7 @@ end_investigation_stuff:
 
 ; dialogue stuff
 dialogue_active: .res 1
+dialogue_buffer: .res 4 * 2
 
 ; temp string
 
@@ -253,6 +254,9 @@ no_scroll:
   save_regs
   INC nmis
   JSR flush_vram_buffer
+  ; reset ppuaddr
+  BIT PPUSTATUS
+  JSR set_scroll
   JSR refresh_oam
   ; enable irq for dialogue box
   STA IRQ_DISABLE
@@ -260,9 +264,6 @@ no_scroll:
   STA IRQ_LATCH
   STA IRQ_RELOAD
   STA IRQ_ENABLE
-  ; reset ppuaddr
-  BIT PPUSTATUS
-  JSR set_scroll
   JSR FamiToneUpdate
   restore_regs
   RTI
@@ -345,6 +346,7 @@ forever:
   BEQ etc
   STA old_nmis
   ; new frame code
+  JSR readjoy
   JSR game_state_handler
   JSR slow_updates
 etc:
@@ -672,7 +674,6 @@ etc:
 .endproc
 
 .proc waiting_to_start
-  JSR readjoy
   LDA pressed_buttons
   AND #BUTTON_START
   BEQ :+
@@ -686,7 +687,6 @@ etc:
 .endproc
 
 .proc prologue
-  JSR readjoy
   LDA pressed_buttons
   AND #(BUTTON_START|BUTTON_SELECT|BUTTON_A|BUTTON_B)
   BEQ :+
@@ -696,7 +696,6 @@ etc:
 .endproc
 
 .proc help
-  JSR readjoy
   LDA pressed_buttons
   AND #(BUTTON_START|BUTTON_SELECT|BUTTON_A|BUTTON_B)
   BEQ :+
@@ -731,7 +730,6 @@ etc:
   BNE :-
   STX sprite_counter
 
-  JSR readjoy
   LDA pressed_buttons
   AND #(BUTTON_START|BUTTON_SELECT)
   BEQ :+
@@ -782,7 +780,6 @@ etc:
   RTS
 :
 
-  JSR readjoy
   LDA buttons
   AND #(BUTTON_LEFT|BUTTON_RIGHT|BUTTON_UP|BUTTON_DOWN)
   BEQ :+
@@ -804,6 +801,11 @@ etc:
 .endproc
 
 .proc dialogue_handler
+  LDA released_buttons
+  AND #BUTTON_A
+  BEQ :+
+  JSR talk
+:
   RTS
 .endproc
 
@@ -955,8 +957,68 @@ far_from_character:
   BNE :+
   RTS
 :
-  LDA #$01
+
+  INC dialogue_active
+  LDA dialogue_active
+  CMP #$04
+  BNE :+
+  LDA #$00
   STA dialogue_active
+  RTS
+:
+  CMP #$01
+  BNE :+
+  ; init dialogue
+  LDX room_character
+  LDA character_dialogues_l
+  STA addr_ptr
+  LDA character_dialogues_h
+  STA addr_ptr+1
+  LDY #7
+@loop:
+  LDA (addr_ptr), Y
+  STA dialogue_buffer, Y
+  DEY
+  BPL @loop
+
+  vram_buffer_alloc 5
+  LDA #($26 | $80)
+  STA vram_buffer, X
+  INX
+  LDA #$c3
+  STA vram_buffer, X
+  INX
+  LDA dialogue_buffer
+  STA vram_buffer, X
+  INX
+  LDA dialogue_buffer+1
+  STA vram_buffer, X
+  INX
+  LDA #$00
+  STA vram_buffer, X
+  STX vram_buffer_sp
+:
+
+  vram_buffer_alloc 5
+  LDA dialogue_active
+  ASL
+  TAY
+  LDA #($26 | $80)
+  STA vram_buffer, X
+  INX
+  LDA #$e0
+  STA vram_buffer, X
+  INX
+  LDA dialogue_buffer, Y
+  STA vram_buffer, X
+  INX
+  LDA dialogue_buffer+1, Y
+  STA vram_buffer, X
+  INX
+  LDA #$00
+  STA vram_buffer, X
+  STX vram_buffer_sp
+
   RTS
 .endproc
 
@@ -968,7 +1030,6 @@ far_from_character:
 .proc mansion_map
   LDX detective_room
 
-  JSR readjoy
   LDA pressed_buttons
   AND #BUTTON_UP
   BEQ :+
