@@ -49,7 +49,7 @@ end
 
 def random_range
   size = 3
-  size += 1 if rand < 0.25
+  # size += 1 if rand < 0.25
   # size += 1 if rand < 0.25
 
   b = rand(25 - size)
@@ -127,9 +127,10 @@ def random_sample(population)
   population.sample
 end
 
+TOP = 3
 def mutate_population(timeline, population)
-  new_pop = [population.first]
-  (population.size - 1).times do
+  new_pop = population.uniq[0...TOP]
+  (population.size - TOP).times do
     mom = random_sample(population)[0]
     dad = random_sample(population)[0]
     cross = rand(24)
