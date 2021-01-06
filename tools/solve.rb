@@ -69,7 +69,7 @@ def gene_to_data(gene)
   gene.each_slice(3)
       .with_index
       .map do |k, v|
-    ['ABCDEFGH'[v], k]
+    ['ABCDEFGH'[v], k.sort_by(&:first)]
   end
 end
 
@@ -81,6 +81,9 @@ def score(timeline, gene)
   score = 0
 
   memory_data.each do |character, ranges|
+    score -= 5 if ranges[1].begin < ranges[0].end
+    score -= 5 if ranges[2].begin < ranges[1].end
+
     ranges.flat_map { |range| range.to_a }
           .each do |frame|
       
