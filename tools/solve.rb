@@ -65,14 +65,18 @@ end
 
 JACKPOT = 1_000_000
 
+def gene_to_data(gene)
+  gene.each_slice(3)
+      .with_index
+      .map do |k, v|
+    ['ABCDEFGH'[v], k]
+  end
+end
+
 def score(timeline, gene)
   checklist = Array.new(241) { Array.new(8) { '.' } }
 
-  memory_data = gene.each_slice(3)
-                    .with_index
-                    .map do |k, v|
-    ['ABCDEFGH'[v], k]
-  end
+  memory_data = gene_to_data(gene)
 
   score = 0
 
@@ -166,7 +170,9 @@ loop do
     puts population.first.inspect
     puts population.map { |pop| pop[1] }.inspect
     if current_score > best
-      File.open('./best-so-far.txt', 'wb') { |f| f.write population.first[0].map { |i| index_to_timestamp(i.begin)..index_to_timestamp(i.end) }.inspect }
+      File.open('./best-so-far.yaml', 'wb') do |f|
+        f.write gene_to_data(population.first[0].map { |i| [index_to_timestamp(i.begin), index_to_timestamp(i.end)] }).to_yaml
+      end
     end
     best = current_score
     break if current_score == JACKPOT
