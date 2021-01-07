@@ -985,39 +985,6 @@ far_from_character:
   JSR clean_dialogue_window
   RTS
 :
-  CMP #$01
-  BNE :+
-  ; init dialogue
-  LDX room_character
-  LDA character_dialogues_l, X
-  STA addr_ptr
-  LDA character_dialogues_h, X
-  STA addr_ptr+1
-  LDY #7
-@loop:
-  LDA (addr_ptr), Y
-  STA dialogue_buffer, Y
-  DEY
-  BPL @loop
-
-  vram_buffer_alloc 5
-  LDA #($26 | $80)
-  STA vram_buffer, X
-  INX
-  LDA #$c3
-  STA vram_buffer, X
-  INX
-  LDA dialogue_buffer
-  STA vram_buffer, X
-  INX
-  LDA dialogue_buffer+1
-  STA vram_buffer, X
-  INX
-  LDA #$00
-  STA vram_buffer, X
-  STX vram_buffer_sp
-:
-
   vram_buffer_alloc 5
   LDA dialogue_active
   ASL
@@ -1038,6 +1005,7 @@ far_from_character:
   STA vram_buffer, X
   STX vram_buffer_sp
 
+  VBLANK
   RTS
 .endproc
 
@@ -1490,6 +1458,43 @@ skip_read_target:
   RTS
 .endproc
 
+.proc init_dialogue
+  ; init dialogue
+  LDX room_character
+  CPX #$8
+  BCC :+
+  RTS
+:
+  LDA character_dialogues_l, X
+  STA addr_ptr
+  LDA character_dialogues_h, X
+  STA addr_ptr+1
+  LDY #7
+@loop:
+  LDA (addr_ptr), Y
+  STA dialogue_buffer, Y
+  DEY
+  BPL @loop
+
+  vram_buffer_alloc 5
+  LDA #($26 | $80)
+  STA vram_buffer, X
+  INX
+  LDA #$c3
+  STA vram_buffer, X
+  INX
+  LDA dialogue_buffer
+  STA vram_buffer, X
+  INX
+  LDA dialogue_buffer+1
+  STA vram_buffer, X
+  INX
+  LDA #$00
+  STA vram_buffer, X
+  STX vram_buffer_sp
+  RTS
+.endproc
+
 .proc load_investigation_stuff
   LDX detective_room
   LDA room_metadata_pointers_l, X
@@ -1502,6 +1507,8 @@ loop:
   STA begin_investigation_stuff, Y
   DEY
   BPL loop
+
+  JSR init_dialogue
   RTS
 .endproc
 
