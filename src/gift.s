@@ -168,6 +168,8 @@ end_investigation_stuff:
 dialogue_active: .res 1
 dialogue_buffer: .res 4 * 2
 
+dialogue_checklist: .res 8
+
 ; temp string
 
 clock_string: .res 6
@@ -337,6 +339,9 @@ clear_ram:
   ; turn off dialogue
   LDA #$00
   STA dialogue_active
+  .repeat 8, i
+  STA dialogue_checklist+i
+  .endrepeat
 
   JSR go_to_title
 
@@ -958,12 +963,26 @@ far_from_character:
   RTS
 :
 
+  LDX room_character
+  LDA dialogue_checklist, X
+  BNE :+
+  JSR exposition_dialogue
+  RTS
+:
+  JSR alethioscope_options
+  RTS
+.endproc
+
+.proc exposition_dialogue
   INC dialogue_active
   LDA dialogue_active
   CMP #$04
   BNE :+
   LDA #$00
   STA dialogue_active
+  LDX room_character
+  INC dialogue_checklist, X
+  JSR clean_dialogue_window
   RTS
 :
   CMP #$01
@@ -1018,6 +1037,37 @@ far_from_character:
   LDA #$00
   STA vram_buffer, X
   STX vram_buffer_sp
+
+  RTS
+.endproc
+
+.proc clean_dialogue_window
+  vram_buffer_alloc 5
+  LDA dialogue_active
+  ASL
+  TAY
+  LDA #($26 | $80)
+  STA vram_buffer, X
+  INX
+  LDA #$e0
+  STA vram_buffer, X
+  INX
+  LDA #<empty_dialogue_window
+  STA vram_buffer, X
+  INX
+  LDA #>empty_dialogue_window
+  STA vram_buffer, X
+  INX
+  LDA #$00
+  STA vram_buffer, X
+  STX vram_buffer_sp
+  RTS
+.endproc
+
+.proc alethioscope_options
+  LDA #1
+  STA dialogue_active
+  LDY room_character
 
   RTS
 .endproc
@@ -1786,6 +1836,13 @@ dialogue_H_3:
 	.byte $01,$77,$1c,$33,$41,$4c,$5c,$4f,$01,$44,$45,$01,$4a,$4f,$47,$4f,$53,$1e,$01,$50,$41,$52,$41,$01,$55,$4d,$41,$01,$01,$01,$75,$01
 	.byte $01,$77,$3c,$4c,$54,$49,$4d,$41,$01,$50,$41,$52,$54,$49,$44,$41,$01,$44,$41,$01,$4e,$4f,$49,$54,$45,$0c,$01,$50,$4f,$52,$75,$01
 	.byte $01,$77,$56,$4f,$4c,$54,$41,$01,$44,$41,$53,$01,$1c,$12,$11,$1a,$13,$10,$1e,$0e,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$75,$01,$00
+empty_dialogue_window:
+	.byte $01,$77,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$75,$01
+	.byte $01,$77,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$75,$01
+	.byte $01,$77,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$75,$01
+	.byte $01,$77,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$75,$01,$00
+
+
 .segment "CHR"
 .incbin "../assets/chr/bg-4k-main.chr"
 .incbin "../assets/chr/sprites-4k.chr"
