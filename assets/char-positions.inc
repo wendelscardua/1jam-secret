@@ -249,11 +249,6 @@ clock_digits_3: .byte "012345678901234567890123456789012345678901234567890123456
 .define alethioscope_data_pointers alethioscope_data_A, alethioscope_data_B, alethioscope_data_C, alethioscope_data_D, alethioscope_data_E, alethioscope_data_F, alethioscope_data_G, alethioscope_data_H
 alethioscope_data_pointers_l: .lobytes alethioscope_data_pointers
 alethioscope_data_pointers_h: .hibytes alethioscope_data_pointers
-alethioscope_data_A: .byte $28, $46, $6e, $45, $63, $8b
-alethioscope_data_B: .byte $00, $5a, $a0, $1d, $77, $bd
-alethioscope_data_C: .byte $6e, $b4, $d2, $8b, $d1, $f0
-alethioscope_data_D: .byte $28, $50, $8c, $45, $6d, $a9
-alethioscope_data_E: .byte $14, $82, $a0, $31, $9f, $bd
-alethioscope_data_F: .byte $1e, $46, $d2, $3b, $63, $f0
-alethioscope_data_G: .byte $5a, $82, $a0, $77, $9f, $bd
-alethioscope_data_H: .byte $64, $82, $d2, $81, $9f, $f0
+alethioscope_start_frames: .byte $28, $46, $6e, $..fbc8, $00, $5a, $a0, $..fbc8, $6e, $b4, $d2, $..fbc8, $28, $50, $8c, $..fbc8, $14, $82, $a0, $..fbc8, $1e, $46, $d2, $..fbc8, $5a, $82, $a0, $..fbc8, $64, $82, $d2, $..fbc8
+alethioscope_end_frames: .byte $45, $63, $8b, $..fbc8, $1d, $77, $bd, $..fbc8, $8b, $d1, $f0, $..fbc8, $45, $6d, $a9, $..fbc8, $31, $9f, $bd, $..fbc8, $3b, $63, $f0, $..fbc8, $77, $9f, $bd, $..fbc8, $81, $9f, $f0, $..fbc8
+alethioscope_rooms: .byte $09, $07, $04, $00, $02, $08, $05, $00, $09, $05, $05, $00, $06, $01, $05, $00, $09, $09, $03, $00, $02, $06, $03, $00, $06, $04, $07, $00, $09, $05, $06, $00

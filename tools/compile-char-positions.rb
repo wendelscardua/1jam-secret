@@ -21,6 +21,12 @@ def index_to_timestamp(index)
   (minutes / 60) * 100 + minutes % 60
 end
 
+def asm_array(array)
+  array.map { |byte| format('$%02x', byte) }
+       .join(', ')
+       .then { |byte_string| ".byte #{byte_string}" }
+end
+
 last_time_index = timestamp_to_index(2200)
 
 timeline = Array.new(last_time_index + 1) do
@@ -40,7 +46,9 @@ characters.each do |character, _|
         next_idx = indices.select { |idx| idx > time_index }.min
         room1, x1, y1 = char_data[prev_idx]
         room2, x2, y2 = char_data[next_idx]
-        raise "Invalid data for #{character}, missing between #{index_to_timestamp(prev_idx)} and #{index_to_timestamp(next_idx)}" if room1 != room2
+        if room1 != room2
+          raise "Invalid data for #{character}, missing between #{index_to_timestamp(prev_idx)} and #{index_to_timestamp(next_idx)}"
+        end
 
         [
           rooms[room1],
@@ -68,7 +76,9 @@ puts 'keyframe_lt_h: .hibytes keyframe_lt'
                          (1..2).map do |i|
                            delta = (timeline[index][character][i] - timeline[index + 1][character][i]).abs
                            delta = delta.to_f / fpm
-                           raise "Huge delta_#{i}: #{delta} at timestamp #{index_to_timestamp(index)}, char #{character}"  if delta.to_i > 0
+                           if delta.to_i > 0
+                             raise "Huge delta_#{i}: #{delta} at timestamp #{index_to_timestamp(index)}, char #{character}"
+                           end
 
                            (delta * 256).to_i
                          end
@@ -81,13 +91,8 @@ end
 clock_digits = (0..last_time_index).map { |i| index_to_timestamp(i).to_s.chars }
                                    .transpose
                                    .map
-                                   .with_index { |bytes, index| %Q{clock_digits_#{index}: .byte "#{bytes.join}"} }
+                                   .with_index { |bytes, index| %(clock_digits_#{index}: .byte "#{bytes.join}") }
 puts clock_digits
-
-alethioscope_data_pointers = memory_data.keys.map { |key| "alethioscope_data_#{key}" }.join(', ')
-puts ".define alethioscope_data_pointers #{alethioscope_data_pointers}"
-puts 'alethioscope_data_pointers_l: .lobytes alethioscope_data_pointers'
-puts 'alethioscope_data_pointers_h: .hibytes alethioscope_data_pointers'
 
 # check memory_data consistency
 checklist = Array.new(last_time_index + 1) { Array.new(8) { '.' } }
@@ -107,7 +112,7 @@ memory_data.each do |character, ranges|
 end
 
 (0..last_time_index).each do |frame|
-  $stderr.puts "#{index_to_timestamp(frame)} : #{checklist[frame].join}"
+  warn "#{index_to_timestamp(frame)} : #{checklist[frame].join}"
 end
 
 bad_ranges = false
@@ -116,11 +121,9 @@ checklist.transpose.each_with_index do |char_checklist, char_index|
   # compute and display uncovered ranges
   ranges = []
   (0..last_time_index).each do |frame|
-    if char_checklist[frame] != 'x'
-      ranges << (frame..frame)
-    end
+    ranges << (frame..frame) if char_checklist[frame] != 'x'
   end
-  raise "C must have a range" if ranges.empty? && char_index == 2
+  raise 'C must have a range' if ranges.empty? && char_index == 2
   next if ranges.empty?
 
   i = 0
@@ -134,19 +137,25 @@ checklist.transpose.each_with_index do |char_checklist, char_index|
     i += 1
   end
   char = characters.keys.sort[char_index]
-  $stderr.puts "Uncovered ranges for #{char}: #{ranges.map { |r| (index_to_timestamp(r.begin)..index_to_timestamp(r.end)) }.inspect}"
+  warn "Uncovered ranges for #{char}: #{ranges.map do |r|
+                                          (index_to_timestamp(r.begin)..index_to_timestamp(r.end))
+                                        end.inspect}"
   bad_ranges = true if char_index != 2 ||
                        ranges.any? { |range| range != (timestamp_to_index(2040)..timestamp_to_index(2059)) }
 end
 
-raise "Bad range(s)" if bad_ranges
+raise 'Bad range(s)' if bad_ranges
 
-memory_data.each do |key, frames|
-  frames_bytes = [
-    frames[0][0], frames[1][0], frames[2][0],
-    frames[0][1], frames[1][1], frames[2][1]
-  ].map { |timestamp| timestamp_to_index(timestamp) }
-   .map { |byte| '$%02x' % byte }
-   .join(', ')
-  puts "alethioscope_data_#{key}: .byte #{frames_bytes}"
+# padding frames with zeroes so index = character << 2 + (0..2)
+start_frames = memory_data.flat_map { |_key, frames| [frames[0][0], frames[1][0], frames[2][0], 1800] }
+                          .map { |frame| timestamp_to_index(frame) }
+end_frames = memory_data.flat_map { |_key, frames| [frames[0][1], frames[1][1], frames[2][1], 1800] }
+                        .map { |frame| timestamp_to_index(frame) }
+rooms = memory_data.flat_map do |key, frames|
+  [frames[0][0], frames[1][0], frames[2][0]].map { |frame| timeline[timestamp_to_index(frame)][key][0] } +
+    [0]
 end
+
+puts "alethioscope_start_frames: #{asm_array(start_frames)}"
+puts "alethioscope_end_frames: #{asm_array(end_frames)}"
+puts "alethioscope_rooms: #{asm_array(rooms)}"
