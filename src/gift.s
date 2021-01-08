@@ -1035,7 +1035,67 @@ far_from_character:
 .proc alethioscope_options
   LDA #1
   STA dialogue_active
-  LDY room_character
+  .repeat 3, i
+  LDA room_character
+  ASL
+  ASL
+  TAY
+  LDA alethioscope_start_frames+i, Y
+  TAY
+
+  vram_buffer_alloc 14
+  LDA #.hibyte($26e4 + $20 * i)
+  STA vram_buffer, X
+  INX
+  LDA #.lobyte($26e4 + $20 * i)
+  STA vram_buffer, X
+  INX
+  LDA clock_digits_0, Y
+  STA vram_buffer, X
+  INX
+  LDA clock_digits_1, Y
+  STA vram_buffer, X
+  INX
+  LDA #$1a
+  STA vram_buffer, X
+  INX  
+  LDA clock_digits_2, Y
+  STA vram_buffer, X
+  INX
+  LDA clock_digits_3, Y
+  STA vram_buffer, X
+  INX
+  LDA #$00
+  STA vram_buffer, X
+  INX
+
+  LDA room_character
+  ASL
+  ASL
+  TAY
+  LDA alethioscope_rooms+i, Y
+  ASL
+  CLC
+  ADC language
+  TAY
+
+  LDA #($80 | .hibyte($26ea + $20 * i))
+  STA vram_buffer, X
+  INX
+  LDA #.lobyte($26ea + $20 * i)
+  STA vram_buffer, X
+  INX
+  LDA room_strings_l, Y
+  STA vram_buffer, X
+  INX
+  LDA room_strings_h, Y
+  STA vram_buffer, X
+  INX
+  LDA #$00
+  STA vram_buffer, X
+  STX vram_buffer_sp
+  
+  .endrepeat
 
   RTS
 .endproc
