@@ -576,8 +576,6 @@ etc:
 .endproc
 
 .proc go_to_investigating
-  SCREEN_OFF
-
   LDA #game_states::investigating
   STA game_state
 
@@ -591,6 +589,8 @@ etc:
   .endrepeat
   BNE :-
 
+  SCREEN_OFF
+
   JSR load_palettes
 
   JSR load_default_chr
@@ -599,14 +599,13 @@ etc:
   JSR load_room
   JSR load_investigation_stuff
 
+  SCREEN_ON
   ; PLAY CanonInD
 
   RTS
 .endproc
 
 .proc go_to_map
-  SCREEN_OFF
-
   LDA #game_states::mansion_map
   STA game_state
 
@@ -619,6 +618,8 @@ etc:
   INX
   .endrepeat
   BNE :-
+
+  SCREEN_OFF
 
   JSR load_palettes
 
@@ -660,6 +661,8 @@ etc:
   .endrepeat
   BNE :-
 
+  SCREEN_OFF
+
   JSR load_palettes
 
   JSR load_default_chr
@@ -670,12 +673,17 @@ etc:
 
   ; PLAY CanonInD
 
+  VBLANK
+
+  SCREEN_ON
+
   RTS
 .endproc
 
 .proc go_to_game_over
   LDA #game_states::game_over
   STA game_state
+  KIL
   RTS
 .endproc
 
@@ -713,13 +721,6 @@ etc:
   JSR game_setup
 
   JSR go_to_investigating
-  ; LDA #4
-  ; STA alethioscope_character
-  ; LDA #((21-18)*60+10)
-  ; STA alethioscope_current_frame
-  ; LDA #240
-  ; STA alethioscope_target_frame
-  ; JSR go_to_alethioscoping
 :
   RTS
 .endproc
@@ -1171,6 +1172,24 @@ far_from_character:
 .endproc
 
 .proc select_alethioscope_option
+  LDA alethioscope_selection
+  CMP #3
+  BNE :+
+  RTS
+:
+  LDA room_character
+  ASL
+  ASL
+  CLC
+  ADC alethioscope_selection
+  TAY
+  LDA room_character
+  STA alethioscope_character
+  LDA alethioscope_start_frames, Y
+  STA alethioscope_current_frame
+  LDA alethioscope_end_frames, Y
+  STA alethioscope_target_frame
+  JSR go_to_alethioscoping
   RTS
 .endproc
 
