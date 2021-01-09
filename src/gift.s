@@ -980,6 +980,12 @@ revert:
 
 ; return nonzero flag if detective is near the character
 .proc near_room_character
+  LDA room_character
+  CMP #8
+  BCC :+
+  LDA #$00
+  RTS
+:
 
   LDA detective_x
   CLC
