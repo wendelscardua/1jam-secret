@@ -18,7 +18,7 @@ FT_DPCM_OFF=$c000
 
 ; music/sfx constants
 .enum music_track
-  CanonInD
+  Chill
 .endenum
 
 .enum sfx
@@ -471,7 +471,7 @@ etc:
 
   SCREEN_ON
 
-  ; PLAY CanonInD
+  PLAY Chill
 
   RTS
 .endproc
@@ -579,7 +579,6 @@ etc:
   JSR load_investigation_stuff
 
   SCREEN_ON
-  ; PLAY CanonInD
 
   RTS
 .endproc
@@ -620,8 +619,6 @@ etc:
 
   SCREEN_ON
 
-  ; PLAY CanonInD
-
   RTS
 .endproc
 
@@ -649,8 +646,6 @@ etc:
   JSR load_alethioscope_current_frame
 
   ; game setup here
-
-  ; PLAY CanonInD
 
   VBLANK
 
