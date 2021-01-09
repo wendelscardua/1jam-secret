@@ -671,7 +671,40 @@ etc:
 .proc go_to_game_over
   LDA #game_states::game_over
   STA game_state
-  KIL
+
+  SCREEN_OFF
+
+  JSR load_palettes
+
+  JSR load_default_chr
+
+  LDA PPUSTATUS
+  LDA #$20
+  STA PPUADDR
+  LDA #$00
+  STA PPUADDR
+
+  LDA room_character
+  CMP #2
+  BNE bad_ending
+  ; good ending
+  LDA #<nametable_good_ending
+  STA rle_ptr
+  LDA #>nametable_good_ending
+  STA rle_ptr+1
+  JMP display_ending:
+bad_ending:
+  LDA #<nametable_bad_ending
+  STA rle_ptr
+  LDA #>nametable_bad_ending
+  STA rle_ptr+1
+display_ending:
+  JSR unrle
+
+  VBLANK
+
+  SCREEN_ON
+
   RTS
 .endproc
 
@@ -1373,7 +1406,12 @@ next_alethioscope_frame:
   JSR load_alethioscope_current_frame
   RTS
 :
+  LDA accusation
+  BNE :+
   JSR go_to_investigating
+  RTS
+:
+  JSR go_to_game_over
   RTS
 .endproc
 
@@ -1735,6 +1773,8 @@ nametable_prologue: .incbin "../assets/nametables/prologue.rle"
 nametable_help: .incbin "../assets/nametables/help.rle"
 nametable_map: .incbin "../assets/nametables/map.rle"
 nametable_dialogue_box: .incbin "../assets/nametables/dialogue-box.rle"
+nametable_bad_ending: .incbin "../assets/nametables/bad-ending.rle"
+nametable_good_ending: .incbin "../assets/nametables/good-ending.rle"
 
 ; cancel string
 string_cancel: .byte "Cancelar", $00 ; TODO: translation
