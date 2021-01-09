@@ -134,6 +134,7 @@ alethioscope_current_frame: .res 1
 alethioscope_target_frame: .res 1
 alethioscope_frame_ptr: .res 2
 alethioscope_frame_counter: .res 1
+alethioscope_selection: .res 1
 
 ; character stuff
 character_room: .res NUM_CHARACTERS
@@ -974,14 +975,18 @@ far_from_character:
 .endproc
 
 .proc exposition_dialogue
+  ; use dialogue active both as flag and as dialog entry counter
   INC dialogue_active
   LDA dialogue_active
   CMP #$04
   BNE :+
+  ; finished dialogue, next interaction will be with alethioscope
   LDA #$00
   STA dialogue_active
   LDX room_character
   INC dialogue_checklist, X
+  LDA #$00
+  STA alethioscope_selection
   JSR clean_dialogue_window
   RTS
 :
