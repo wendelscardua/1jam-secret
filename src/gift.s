@@ -1691,7 +1691,7 @@ room_strings_l: .lobytes room_strings
 room_strings_h: .hibytes room_strings
 
 string_study_en:         .byte "Study          ", $00
-string_study_pt:         .byte "Escritorio     ", $00 ; TODO diacritics
+string_study_pt:         .byte "Escrit",$5b,"rio     ", $00
 string_hall_en:          .byte "Hall           ", $00
 string_hall_pt:          .byte "Hall           ", $00
 string_lounge_en:        .byte "Lounge         ", $00
@@ -1700,12 +1700,12 @@ string_library_en:       .byte "Library        ", $00
 string_libray_pt:        .byte "Biblioteca     ", $00
 string_dining_room_en:   .byte "Dining room    ", $00
 string_dining_room_pt:   .byte "Sala de jantar ", $00
-string_billiard_room_en: .byte "Billiard room_ ", $00
-string_billiard_room_pt: .byte "Salao de jogos ", $00 ; TODO diacritics
+string_billiard_room_en: .byte "Billiard room  ", $00
+string_billiard_room_pt: .byte "Sal",$5c,"o de jogos ", $00
 string_conservatory_en:  .byte "Conservatory   ", $00
 string_conservatory_pt:  .byte "Estufa         ", $00
 string_ballroom_en:      .byte "Ballroom       ", $00
-string_ballroom_pt:      .byte "Salao de festas", $00 ; TODO diacritics
+string_ballroom_pt:      .byte "Sal",$5c,"o de festas", $00
 string_kitchen_en:       .byte "Kitchen        ", $00
 string_kitchen_pt:       .byte "Cozinha        ", $00
 
