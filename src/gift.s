@@ -811,7 +811,45 @@ etc:
   AND #BUTTON_A
   BEQ :+
   JSR talk
+  RTS
 :
+  LDA dialogue_active
+  CMP #$04 ; HACK - indicates we are in selection mode
+  BEQ :+
+  RTS
+: 
+  LDA released_buttons
+  AND #BUTTON_UP
+  BEQ :+
+  DEC alethioscope_selection
+:
+  LDA released_buttons
+  AND #BUTTON_DOWN
+  BEQ :+
+  INC alethioscope_selection  
+:
+  LDA alethioscope_selection
+  AND #%11
+  STA alethioscope_selection
+
+  LDX sprite_counter
+  LDA #$14
+  STA oam_sprites+Sprite::xcoord, X
+  LDA alethioscope_selection
+  .repeat 3
+  ASL
+  .endrepeat
+  CLC
+  ADC #$b8
+  STA oam_sprites+Sprite::ycoord, X
+  LDA #$14 ; arrow tile
+  STA oam_sprites+Sprite::tile, X
+  LDA #$03
+  STA oam_sprites+Sprite::flag, X
+  TXA
+  CLC
+  ADC #.sizeof(Sprite)
+  STA sprite_counter
   RTS
 .endproc
 
@@ -1038,8 +1076,18 @@ far_from_character:
 .endproc
 
 .proc alethioscope_options
-  LDA #1
+  LDA dialogue_active
+  BEQ :+
+  LDA #$00
   STA dialogue_active
+  JSR select_alethioscope_option
+  RTS
+:
+  LDA #$04
+  STA dialogue_active
+  LDA #$00
+  STA alethioscope_selection
+
   .repeat 3, i
   LDA room_character
   ASL
@@ -1102,6 +1150,27 @@ far_from_character:
   
   .endrepeat
 
+  vram_buffer_alloc 5
+  LDA #($80 | .hibyte($26e4 + $20 * 3))
+  STA vram_buffer, X
+  INX
+  LDA #.lobyte($26e4 + $20 * 3)
+  STA vram_buffer, X
+  INX
+  LDA #<string_cancel
+  STA vram_buffer, X
+  INX
+  LDA #>string_cancel
+  STA vram_buffer, X
+  INX
+  LDA #$00
+  STA vram_buffer, X
+  STX vram_buffer_sp
+
+  RTS
+.endproc
+
+.proc select_alethioscope_option
   RTS
 .endproc
 
@@ -1597,6 +1666,9 @@ nametable_prologue: .incbin "../assets/nametables/prologue.rle"
 nametable_help: .incbin "../assets/nametables/help.rle"
 nametable_map: .incbin "../assets/nametables/map.rle"
 nametable_dialogue_box: .incbin "../assets/nametables/dialogue-box.rle"
+
+; cancel string
+string_cancel: .byte "Cancelar", $00 ; TODO: translation
 
 ; room names
 .define room_strings $0000, $0000, \
