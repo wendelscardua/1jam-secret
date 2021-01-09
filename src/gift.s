@@ -103,7 +103,6 @@ oam_sprites:
 .importzp last_frame_buttons
 .importzp released_buttons
 .importzp pressed_buttons
-.importzp rng_seed
 .importzp rle_ptr
 
 ; zp vars
@@ -204,7 +203,6 @@ game_state: .res 1
 
 .import reset_handler
 .import readjoy
-.import rand
 .import unrle
 
 .import music_data
@@ -323,12 +321,6 @@ clear_ram:
   LDA #1
   JSR FamiToneSfxInit
 
-  ; init rng
-  LDA #$a9
-  STA rng_seed
-  LDA #$73
-  STA rng_seed+1
-
   CLI ; enable interrupts
 
   ; prepare clock string
@@ -354,7 +346,6 @@ forever:
   ; new frame code
   JSR readjoy
   JSR game_state_handler
-  JSR slow_updates
 etc:
   JMP forever
 .endproc
@@ -434,11 +425,6 @@ etc:
   PHA
   LDA game_state_handlers_l, X
   PHA
-  RTS
-.endproc
-
-.proc slow_updates
-  JSR rand
   RTS
 .endproc
 
