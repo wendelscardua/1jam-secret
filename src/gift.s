@@ -70,6 +70,7 @@ LAST_FRAME = 240
 NUM_CHARACTERS = 9
 FRAMES_PER_ALETHIOSCOPE_MINUTE = 60
 DIALOGUE_Y = $a0
+.define DEFAULT_SPEED 2
 
 .enum direction
   up
@@ -1293,12 +1294,15 @@ pt:
   
   JSR render_characters
   JSR erase_remaining_sprites
-
+  .repeat DEFAULT_SPEED
   DEC alethioscope_frame_counter
+  .endrepeat
   BEQ next_alethioscope_frame
   BMI next_alethioscope_frame
 
+  .repeat DEFAULT_SPEED
   JSR alethioscope_animation
+  .endrepeat
 
   RTS
 next_alethioscope_frame:
