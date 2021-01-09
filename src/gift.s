@@ -168,8 +168,8 @@ end_investigation_stuff:
 ; dialogue stuff
 dialogue_active: .res 1
 dialogue_buffer: .res 4 * 2
-
 dialogue_checklist: .res 8
+accusation: .res 1
 
 ; temp string
 
@@ -336,6 +336,7 @@ clear_ram:
   .repeat 8, i
   STA dialogue_checklist+i
   .endrepeat
+  STA accusation
 
   JSR go_to_title
 
@@ -990,6 +991,12 @@ far_from_character:
   RTS
 :
 
+  LDA accusation
+  BEQ :+
+  JSR go_to_last_alethioscoping
+  RTS
+:
+
   LDX room_character
   LDA dialogue_checklist, X
   BNE :+
@@ -997,6 +1004,33 @@ far_from_character:
   RTS
 :
   JSR alethioscope_options
+  RTS
+.endproc
+
+.proc go_to_last_alethioscoping
+  LDA #$00
+  STA dialogue_active
+  LDA room_character
+  STA alethioscope_character
+  CMP #2
+  BNE wrong
+  ; right
+  LDA #160 ; 20:40
+  STA alethioscope_current_frame
+  JMP skip_wrong
+wrong:
+  LDA nmis
+  AND #%00111111
+  CLC
+  ADC #75 ; 19:15
+  STA alethioscope_current_frame
+skip_wrong:
+  LDA alethioscope_current_frame
+  CLC
+  ADC #19
+  STA alethioscope_target_frame
+
+  JSR go_to_alethioscoping
   RTS
 .endproc
 
@@ -1181,7 +1215,33 @@ far_from_character:
 .endproc
 
 .proc accuse
-  KIL ; TODO
+  JSR near_room_character
+  BNE :+
+  RTS
+:
+  LDA #$05
+  STA dialogue_active
+  STA accusation
+
+  vram_buffer_alloc 5
+  LDA dialogue_active
+  ASL
+  TAY
+  LDA #($26 | $80)
+  STA vram_buffer, X
+  INX
+  LDA #$e0
+  STA vram_buffer, X
+  INX
+  LDA #<accusation_dialogue
+  STA vram_buffer, X
+  INX
+  LDA #>accusation_dialogue
+  STA vram_buffer, X
+  INX
+  LDA #$00
+  STA vram_buffer, X
+  STX vram_buffer_sp
   RTS
 .endproc
 
@@ -1684,7 +1744,7 @@ string_cancel: .byte "Cancelar", $00 ; TODO: translation
                      string_study_en, string_study_pt, \
                      string_hall_en, string_hall_pt, \
                      string_lounge_en, string_lounge_pt, \
-                     string_library_en, string_libray_pt, \
+                     string_library_en, string_library_pt, \
                      string_dining_room_en, string_dining_room_pt, \
                      string_billiard_room_en, string_billiard_room_pt, \
                      string_conservatory_en, string_conservatory_pt, \
@@ -1701,7 +1761,7 @@ string_hall_pt:          .byte "Hall           ", $00
 string_lounge_en:        .byte "Lounge         ", $00
 string_lounge_pt:        .byte "Sala de estar  ", $00
 string_library_en:       .byte "Library        ", $00
-string_libray_pt:        .byte "Biblioteca     ", $00
+string_library_pt:        .byte "Biblioteca     ", $00
 string_dining_room_en:   .byte "Dining room    ", $00
 string_dining_room_pt:   .byte "Sala de jantar ", $00
 string_billiard_room_en: .byte "Billiard room  ", $00
@@ -1994,6 +2054,11 @@ empty_dialogue_window:
 	.byte $01,$77,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$75,$01
 	.byte $01,$77,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$75,$01
 	.byte $01,$77,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$75,$01,$00
+accusation_dialogue:
+	.byte $01,$77,$2d,$41,$53,$0e,$0e,$0e,$01,$4d,$41,$53,$0e,$0e,$0e,$01,$4e,$5c,$4f,$01,$46,$55,$49,$01,$45,$55,$0c,$01,$01,$01,$75,$01
+	.byte $01,$77,$4e,$49,$4e,$47,$55,$5f,$4d,$01,$56,$49,$55,$01,$2c,$41,$44,$59,$01,$21,$47,$41,$54,$48,$41,$01,$45,$01,$45,$55,$75,$01
+	.byte $01,$77,$53,$4f,$5a,$49,$4e,$48,$4f,$53,$01,$4e,$55,$4d,$01,$4d,$45,$53,$4d,$4f,$01,$41,$50,$4f,$53,$45,$4e,$54,$4f,$0c,$75,$01
+	.byte $01,$77,$4e,$5c,$4f,$01,$48,$5d,$01,$50,$52,$4f,$56,$41,$53,$01,$43,$4f,$4e,$54,$52,$41,$01,$4d,$49,$4d,$0e,$0e,$0e,$01,$75,$01,$00
 
 
 .segment "CHR"
