@@ -330,14 +330,6 @@ clear_ram:
   LDA #$00
   STA clock_string+5
 
-  ; turn off dialogue
-  LDA #$00
-  STA dialogue_active
-  .repeat 8, i
-  STA dialogue_checklist+i
-  .endrepeat
-  STA accusation
-
   JSR go_to_title
 
 forever:
@@ -474,7 +466,6 @@ etc:
   LDA #>nametable_dialogue_box
   STA rle_ptr+1
   JSR unrle
-
 
   VBLANK
 
@@ -692,7 +683,7 @@ etc:
   STA rle_ptr
   LDA #>nametable_good_ending
   STA rle_ptr+1
-  JMP display_ending:
+  JMP display_ending
 bad_ending:
   LDA #<nametable_bad_ending
   STA rle_ptr
@@ -771,6 +762,14 @@ display_ending:
   ; initial room
   LDA #2 ; hall
   STA detective_room
+
+  ; turn off dialogue
+  LDA #$00
+  STA dialogue_active
+  .repeat 8, i
+  STA dialogue_checklist+i
+  .endrepeat
+  STA accusation
   RTS
 .endproc
 
